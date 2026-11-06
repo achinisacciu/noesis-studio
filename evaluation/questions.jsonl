@@ -1,0 +1,48 @@
+{"document": "statistica-descrittiva.md", "section": "Media aritmetica", "question": "Se sommo tutti i voti degli esami e divido per il numero di esami, quale indice ottengo?"}
+{"document": "statistica-descrittiva.md", "section": "Media aritmetica", "question": "Quale misura di tendenza centrale risente molto di un valore estremo?"}
+{"document": "statistica-descrittiva.md", "section": "Media aritmetica", "question": "Come si calcola il valore medio di un insieme di osservazioni?"}
+{"document": "statistica-descrittiva.md", "section": "Mediana e quartili", "question": "Quale valore lascia metà delle osservazioni sotto di sé e metà sopra?"}
+{"document": "statistica-descrittiva.md", "section": "Mediana e quartili", "question": "Come si comporta la mediana in presenza di un dato anomalo?"}
+{"document": "statistica-descrittiva.md", "section": "Mediana e quartili", "question": "Che cosa delimita il primo e il terzo quartile e come si chiama la loro distanza?"}
+{"document": "statistica-descrittiva.md", "section": "Varianza e deviazione standard", "question": "Come misuro quanto i dati sono sparsi attorno alla loro media?"}
+{"document": "statistica-descrittiva.md", "section": "Varianza e deviazione standard", "question": "Quale grandezza è la radice quadrata della varianza e in che unità si esprime?"}
+{"document": "statistica-descrittiva.md", "section": "Varianza e deviazione standard", "question": "Perché la varianza si esprime nell'unità dei dati al quadrato?"}
+{"document": "statistica-descrittiva.md", "section": "Correlazione", "question": "Come capisco se due variabili tendono a crescere insieme?"}
+{"document": "statistica-descrittiva.md", "section": "Correlazione", "question": "Che cosa significa un coefficiente di correlazione vicino a zero?"}
+{"document": "statistica-descrittiva.md", "section": "Correlazione", "question": "Se due fenomeni sono correlati posso concludere che uno causa l'altro?"}
+{"document": "statistica-descrittiva.md", "section": "Distribuzione normale", "question": "Quali parametri definiscono centro e larghezza della curva a campana?"}
+{"document": "statistica-descrittiva.md", "section": "Distribuzione normale", "question": "Quanta parte delle osservazioni cade entro due deviazioni standard dalla media?"}
+{"document": "statistica-descrittiva.md", "section": "Distribuzione normale", "question": "Perché la media di molti campioni tende ad assumere una forma gaussiana?"}
+{"document": "algebra-lineare.md", "section": "Vettori e prodotto scalare", "question": "Come si calcola il prodotto scalare tra due liste di numeri?"}
+{"document": "algebra-lineare.md", "section": "Vettori e prodotto scalare", "question": "Che cosa vuol dire che due frecce sono ortogonali?"}
+{"document": "algebra-lineare.md", "section": "Vettori e prodotto scalare", "question": "Come si ottiene la lunghezza di un vettore?"}
+{"document": "algebra-lineare.md", "section": "Matrici e operazioni", "question": "Quando è possibile moltiplicare due tabelle di numeri disposte in righe e colonne?"}
+{"document": "algebra-lineare.md", "section": "Matrici e operazioni", "question": "Che cosa fa la trasposta di una matrice?"}
+{"document": "algebra-lineare.md", "section": "Matrici e operazioni", "question": "Quale matrice moltiplicata per un vettore lo lascia invariato?"}
+{"document": "algebra-lineare.md", "section": "Determinante e rango", "question": "Da quale numero capisco se una matrice quadrata ammette inversa?"}
+{"document": "algebra-lineare.md", "section": "Determinante e rango", "question": "Che cosa misura il rango di una matrice?"}
+{"document": "algebra-lineare.md", "section": "Determinante e rango", "question": "Se il determinante vale zero la matrice è invertibile?"}
+{"document": "algebra-lineare.md", "section": "Sistemi lineari", "question": "Come si risolve un sistema di equazioni combinando le righe fino alla forma triangolare?"}
+{"document": "algebra-lineare.md", "section": "Sistemi lineari", "question": "Quando un sistema di equazioni lineari non ammette alcuna soluzione?"}
+{"document": "algebra-lineare.md", "section": "Sistemi lineari", "question": "Che cosa rappresentano due rette che si incontrano in un solo punto?"}
+{"document": "algebra-lineare.md", "section": "Autovalori e autovettori", "question": "Quali vettori restano sulla stessa retta dopo una trasformazione lineare?"}
+{"document": "algebra-lineare.md", "section": "Autovalori e autovettori", "question": "Come si trova il polinomio caratteristico di una matrice?"}
+{"document": "algebra-lineare.md", "section": "Autovalori e autovettori", "question": "A che cosa servono gli autovalori nello studio della stabilità e nella compressione delle immagini?"}
+{"document": "machine-learning.md", "section": "Apprendimento supervisionato", "question": "Che differenza c'è tra imparare con risposte di riferimento e senza?"}
+{"document": "machine-learning.md", "section": "Apprendimento supervisionato", "question": "Che cos'è un problema in cui bisogna assegnare una categoria a ogni esempio?"}
+{"document": "machine-learning.md", "section": "Apprendimento supervisionato", "question": "Nel raggruppamento automatico esistono etichette fornite a priori?"}
+{"document": "machine-learning.md", "section": "Regressione lineare", "question": "Come stimo una relazione lineare tra variabili di input e un output numerico?"}
+{"document": "machine-learning.md", "section": "Regressione lineare", "question": "Che cosa minimizza il metodo dei minimi quadrati?"}
+{"document": "machine-learning.md", "section": "Regressione lineare", "question": "Che cosa indica la pendenza della retta stimata?"}
+{"document": "machine-learning.md", "section": "Discesa del gradiente", "question": "In quale direzione si spostano i pesi per ridurre la funzione di perdita?"}
+{"document": "machine-learning.md", "section": "Discesa del gradiente", "question": "A che cosa serve il learning rate e cosa accade se il passo è troppo grande?"}
+{"document": "machine-learning.md", "section": "Discesa del gradiente", "question": "Che cosa aggiorna il gradiente stocastico rispetto a quello classico?"}
+{"document": "machine-learning.md", "section": "Overfitting e regolarizzazione", "question": "Il modello va benissimo in addestramento ma male su dati nuovi: come si chiama questo problema?"}
+{"document": "machine-learning.md", "section": "Overfitting e regolarizzazione", "question": "Come si aggiunge una penalità sulla complessità dei pesi alla funzione di perdita?"}
+{"document": "machine-learning.md", "section": "Overfitting e regolarizzazione", "question": "Che differenza c'è tra penalità L1 e L2 sugli effetti sui pesi?"}
+{"document": "machine-learning.md", "section": "Validazione incrociata", "question": "Come stimo le prestazioni dividendo i dati in pieghe e ruotando la parte di validazione?"}
+{"document": "machine-learning.md", "section": "Validazione incrociata", "question": "Perché ruotare le pieghe è meglio di una singola divisione tra addestramento e validazione?"}
+{"document": "machine-learning.md", "section": "Validazione incrociata", "question": "A che cosa serve tenere da parte un test set fino alla fine?"}
+{"document": "machine-learning.md", "section": "Metriche di classificazione", "question": "Come misuro la quota di positivi reali che il modello è riuscito a trovare?"}
+{"document": "machine-learning.md", "section": "Metriche di classificazione", "question": "Che cosa indica la precisione tra i positivi previsti?"}
+{"document": "machine-learning.md", "section": "Metriche di classificazione", "question": "Quando conviene usare la F1 al posto della semplice accuratezza?"}

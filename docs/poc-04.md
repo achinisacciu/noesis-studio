@@ -68,8 +68,21 @@ Con `--check` i dati finiscono in `data/check/` e vengono azzerati a ogni esecuz
 - Citazione coerente: stesso `document_id`, sezione `Varianza`, score normalizzato.
 - Rebuild completo dell'indice da SQLite.
 - Delete orchestrato: documento e indice spariti, ricerca successiva senza hit.
-- 23 test unitari (8 document, 7 rag, 8 gateway), `ruff` e `mypy --strict` puliti.
+- 36 test unitari (8 document, 7 rag, 13 gateway, 8 ai), `ruff` e `mypy --strict` puliti.
 - Avvio e arresto dei tre processi senza processi residui.
+
+## Valutazione delle citazioni
+
+`evaluation/questions.jsonl` contiene 48 domande etichettate su tre documenti sintetici (`evaluation/corpus/`), 16 sezioni in tutto.
+
+```bash
+python scripts/stack.py --dev      # in un terminale
+python scripts/eval_rag.py         # importa, indicizza, interroga, ripulisce
+```
+
+Lo script verifica che la sezione attesa compaia tra i primi 3 hit della ricerca, perché le citazioni mostrate all'utente derivano dagli hit e non dal testo del modello. Se l'accuratezza scende sotto il gate del 90% esce con codice 1.
+
+Risultato misurato: **46/48 = 95,8%**, gate superato. I due casi mancati sono domande sul raggruppamento non supervisionato (il testo sta nella sezione "Apprendimento supervisionato") e sulla pendenza della retta ("Regressione lineare" non emerge su "Validazione incrociata"). Il corpus è sintetico: il numero non sostituisce una valutazione su materiale di studio reale.
 
 ## Limiti noti
 
@@ -77,6 +90,5 @@ Con `--check` i dati finiscono in `data/check/` e vengono azzerati a ogni esecuz
 - `page` è `None` per DOCX/MD/TXT; solo il PDF ha la pagina.
 - Il chunking è a blocchi, non a finestre sovrapposte: sufficiente per il POC, da valutare per documenti lunghi.
 - Il 404 è ancora mappato su `VALIDATION_ERROR` perché il contratto espone solo sei codici di errore.
-- Nessuna integrazione Tauri: l'avvio resta uno script Python.
 - La ricerca è solo semantica: non c'è ancora espansione della query né reranking.
 - Primo avvio con download del modello di embedding (~79 MB, già in cache su questa macchina).
