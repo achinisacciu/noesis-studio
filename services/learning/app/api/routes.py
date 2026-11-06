@@ -12,6 +12,9 @@ from noesis_contracts import (
     FlashcardList,
     FlashcardUpdate,
     HealthStatus,
+    ReadingPosition,
+    ReadingPositionState,
+    ReadingPositionUpdate,
 )
 
 from app.core.security import require_token
@@ -70,3 +73,25 @@ async def delete_document_flashcards(
     document_id: str = Query(pattern=DOCUMENT_PATTERN),
 ) -> ApiResponse[dict[str, int]]:
     return ApiResponse(data={"deleted": store.delete_for_document(document_id)})
+
+
+@api.get("/reading-positions/{document_id}", response_model=ApiResponse[ReadingPositionState])
+async def get_reading_position(
+    document_id: str = PathParam(pattern=DOCUMENT_PATTERN),
+) -> ApiResponse[ReadingPositionState]:
+    return ApiResponse(data=ReadingPositionState(position=store.reading_position(document_id)))
+
+
+@api.put("/reading-positions/{document_id}", response_model=ApiResponse[ReadingPosition])
+async def save_reading_position(
+    payload: ReadingPositionUpdate,
+    document_id: str = PathParam(pattern=DOCUMENT_PATTERN),
+) -> ApiResponse[ReadingPosition]:
+    return ApiResponse(data=store.save_reading_position(document_id, payload, datetime.now(UTC)))
+
+
+@api.delete("/reading-positions/{document_id}", response_model=ApiResponse[dict[str, int]])
+async def delete_reading_position(
+    document_id: str = PathParam(pattern=DOCUMENT_PATTERN),
+) -> ApiResponse[dict[str, int]]:
+    return ApiResponse(data={"deleted": store.delete_reading_position(document_id)})

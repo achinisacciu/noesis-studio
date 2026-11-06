@@ -184,11 +184,24 @@ def check_flow(gateway: str, token: str) -> None:
     assert status == 200 and body["data"]["front"] == "Che cosa misura la varianza?", body
     print("gateway   ok     flashcard create + list + update")
 
+    status, body = request(
+        "PUT",
+        f"{gateway}/api/reading-positions/{document_id}",
+        token,
+        {"chunk_id": "chunk-2", "position": 2},
+    )
+    assert status == 200 and body["data"]["chunk_id"] == "chunk-2", body
+    status, body = request("GET", f"{gateway}/api/reading-positions/{document_id}", token)
+    assert status == 200 and body["data"]["position"]["position"] == 2, body
+    print("gateway   ok     posizione di lettura salvata e riletta")
+
     status, body = request("DELETE", f"{gateway}/api/documents/{document_id}", token)
     assert status == 200, body
     status, body = request("GET", f"{gateway}/api/flashcards?document_id={document_id}", token)
     assert status == 200 and body["data"]["cards"] == [], body
-    print("gateway   ok     schede rimosse con il documento")
+    status, body = request("GET", f"{gateway}/api/reading-positions/{document_id}", token)
+    assert status == 200 and body["data"]["position"] is None, body
+    print("gateway   ok     schede e posizione rimosse con il documento")
 
     status, body = request("GET", f"{gateway}/api/documents/{document_id}", token)
     assert status == 404, body

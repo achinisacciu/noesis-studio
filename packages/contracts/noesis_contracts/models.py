@@ -143,3 +143,19 @@ class FlashcardUpdate(BaseModel):
 
 class FlashcardList(BaseModel):
     cards: list[Flashcard]
+
+
+class ReadingPosition(BaseModel):
+    document_id: str
+    chunk_id: str
+    position: int
+    updated_at: datetime
+
+
+class ReadingPositionUpdate(BaseModel):
+    chunk_id: str = Field(min_length=1, max_length=64)
+    position: int = Field(ge=0)
+
+
+class ReadingPositionState(BaseModel):
+    position: ReadingPosition | None = None

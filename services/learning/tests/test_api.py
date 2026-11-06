@@ -95,3 +95,29 @@ def test_health_and_ready() -> None:
         response = client.get(path)
         assert response.status_code == 200
         assert response.json()["data"]["status"] == "healthy"
+
+
+def test_reading_position_saves_updates_and_deletes() -> None:
+    empty = client.get("/reading-positions/d1")
+    assert empty.status_code == 200
+    assert empty.json()["data"]["position"] is None
+
+    saved = client.put("/reading-positions/d1", json={"chunk_id": "c1", "position": 1})
+    assert saved.status_code == 200
+    assert saved.json()["data"]["chunk_id"] == "c1"
+
+    updated = client.put("/reading-positions/d1", json={"chunk_id": "c2", "position": 2})
+    assert updated.status_code == 200
+    current = client.get("/reading-positions/d1").json()["data"]["position"]
+    assert (current["chunk_id"], current["position"]) == ("c2", 2)
+
+    removed = client.delete("/reading-positions/d1")
+    assert removed.status_code == 200
+    assert removed.json()["data"] == {"deleted": 1}
+    assert client.get("/reading-positions/d1").json()["data"]["position"] is None
+
+
+def test_reading_position_rejects_invalid_payload() -> None:
+    response = client.put("/reading-positions/d1", json={"chunk_id": "c1", "position": -1})
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"

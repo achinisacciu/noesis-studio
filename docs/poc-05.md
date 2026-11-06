@@ -48,7 +48,7 @@ corepack pnpm tauri:build
 - La UI dentro la finestra carica la libreria dal gateway (documento `statistica`, 3 chunk) e mostra il pannello tutor.
 - Chiusura con `WM_CLOSE`: l'albero di processi Python viene terminato, porte 8010-8014 libere, nessun processo `python`, `node` o `noesis-desktop` residuo.
 - Avvio con gateway già attivo: la shell non avvia un secondo stack e, alla chiusura della finestra, lascia attivo quello esterno.
-- `python scripts/stack.py --check --no-sync` completo: import, indice, ricerca con citazione, rebuild, tutor SSE, creazione/lettura/modifica delle flashcard e delete cascade.
+- `python scripts/stack.py --check --no-sync` completo: import, indice, ricerca con citazione, rebuild, tutor SSE, creazione/lettura/modifica delle flashcard, posizione di lettura e delete cascade.
 - Test CORS del gateway per l'origine `http://tauri.localhost` del webview di produzione.
 
 Durante la prima compilazione il linker mingw ha rifiutato la `cdylib` (`export ordinal too large: 91023`). Il crate desktop ora dichiara solo `crate-type = ["rlib"]`, che è quanto serve al binario; `staticlib` e `cdylib` restano utili solo ai target mobili.

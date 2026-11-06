@@ -11,6 +11,7 @@ from noesis_contracts import (
     FlashcardCreate,
     FlashcardUpdate,
     HealthStatus,
+    ReadingPositionUpdate,
     SearchRequest,
     TutorRequest,
 )
@@ -89,6 +90,11 @@ async def delete_document(
     cards = await forward("DELETE", LEARNING_URL, f"/flashcards?document_id={document_id}")
     if cards.status_code >= 500:
         raise HTTPException(status_code=502, detail="schede non ripulite, documento non eliminato")
+    position = await forward("DELETE", LEARNING_URL, f"/reading-positions/{document_id}")
+    if position.status_code >= 500:
+        raise HTTPException(
+            status_code=502, detail="posizione di lettura non ripulita, documento non eliminato"
+        )
     return await forward("DELETE", DOCUMENT_URL, f"/documents/{document_id}")
 
 
@@ -144,6 +150,26 @@ async def delete_flashcard(
     card_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
 ) -> JSONResponse:
     return await forward("DELETE", LEARNING_URL, f"/flashcards/{card_id}")
+
+
+@api.get("/api/reading-positions/{document_id}")
+async def get_reading_position(
+    document_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+) -> JSONResponse:
+    return await forward("GET", LEARNING_URL, f"/reading-positions/{document_id}")
+
+
+@api.put("/api/reading-positions/{document_id}")
+async def save_reading_position(
+    payload: ReadingPositionUpdate,
+    document_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+) -> JSONResponse:
+    return await forward(
+        "PUT",
+        LEARNING_URL,
+        f"/reading-positions/{document_id}",
+        payload.model_dump(mode="json"),
+    )
 
 
 @api.get("/api/ai/models")

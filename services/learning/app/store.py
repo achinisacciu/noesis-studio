@@ -4,7 +4,13 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
-from noesis_contracts import Flashcard, FlashcardCreate, FlashcardUpdate
+from noesis_contracts import (
+    Flashcard,
+    FlashcardCreate,
+    FlashcardUpdate,
+    ReadingPosition,
+    ReadingPositionUpdate,
+)
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS flashcards (
@@ -17,6 +23,12 @@ CREATE TABLE IF NOT EXISTS flashcards (
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_flashcards_document ON flashcards(document_id);
+CREATE TABLE IF NOT EXISTS reading_positions (
+    document_id TEXT PRIMARY KEY,
+    chunk_id TEXT NOT NULL,
+    position INTEGER NOT NULL,
+    updated_at TEXT NOT NULL
+);
 """
 
 
@@ -123,4 +135,48 @@ class Store:
     def delete_for_document(self, document_id: str) -> int:
         with self._db() as conn:
             cursor = conn.execute("DELETE FROM flashcards WHERE document_id = ?", (document_id,))
+            return cursor.rowcount
+
+    @staticmethod
+    def _reading_position(row: sqlite3.Row) -> ReadingPosition:
+        return ReadingPosition(
+            document_id=row["document_id"],
+            chunk_id=row["chunk_id"],
+            position=row["position"],
+            updated_at=datetime.fromisoformat(row["updated_at"]),
+        )
+
+    def reading_position(self, document_id: str) -> ReadingPosition | None:
+        with self._db() as conn:
+            row = conn.execute(
+                "SELECT * FROM reading_positions WHERE document_id = ?", (document_id,)
+            ).fetchone()
+        return self._reading_position(row) if row else None
+
+    def save_reading_position(
+        self, document_id: str, payload: ReadingPositionUpdate, updated_at: datetime
+    ) -> ReadingPosition:
+        timestamp = updated_at.isoformat()
+        with self._db() as conn:
+            conn.execute(
+                "INSERT INTO reading_positions (document_id, chunk_id, position, updated_at)"
+                " VALUES (?, ?, ?, ?)"
+                " ON CONFLICT(document_id) DO UPDATE SET"
+                " chunk_id = excluded.chunk_id,"
+                " position = excluded.position,"
+                " updated_at = excluded.updated_at",
+                (document_id, payload.chunk_id, payload.position, timestamp),
+            )
+        return ReadingPosition(
+            document_id=document_id,
+            chunk_id=payload.chunk_id,
+            position=payload.position,
+            updated_at=updated_at,
+        )
+
+    def delete_reading_position(self, document_id: str) -> int:
+        with self._db() as conn:
+            cursor = conn.execute(
+                "DELETE FROM reading_positions WHERE document_id = ?", (document_id,)
+            )
             return cursor.rowcount

@@ -55,6 +55,7 @@ def test_delete_cleans_index_before_document(monkeypatch: pytest.MonkeyPatch) ->
     assert calls == [
         ("DELETE", routes.RAG_URL, "/index/d1"),
         ("DELETE", routes.LEARNING_URL, "/flashcards?document_id=d1"),
+        ("DELETE", routes.LEARNING_URL, "/reading-positions/d1"),
         ("DELETE", routes.DOCUMENT_URL, "/documents/d1"),
     ]
 
@@ -185,6 +186,43 @@ def test_delete_aborts_when_cards_cleanup_fails(monkeypatch: pytest.MonkeyPatch)
 
     assert response.status_code == 502
     assert calls == ["/index/d1", "/flashcards?document_id=d1"]
+
+
+def test_delete_aborts_when_position_cleanup_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[str] = []
+
+    async def fake_forward(
+        method: str, base_url: str, path: str, payload: dict[str, object] | None = None
+    ) -> JSONResponse:
+        calls.append(path)
+        status = 502 if path.startswith("/reading-positions") else 200
+        return JSONResponse(status_code=status, content={"status": "success", "data": {}})
+
+    monkeypatch.setattr(routes, "forward", fake_forward)
+    response = client.delete("/api/documents/d1")
+
+    assert response.status_code == 502
+    assert calls == ["/index/d1", "/flashcards?document_id=d1", "/reading-positions/d1"]
+
+
+def test_reading_positions_forward_to_learning(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[tuple[str, str, dict[str, object] | None]] = []
+
+    async def fake_forward(
+        method: str, base_url: str, path: str, payload: dict[str, object] | None = None
+    ) -> JSONResponse:
+        calls.append((method, path, payload))
+        return JSONResponse(status_code=200, content={"status": "success", "data": {}})
+
+    monkeypatch.setattr(routes, "forward", fake_forward)
+
+    client.get("/api/reading-positions/d1")
+    client.put("/api/reading-positions/d1", json={"chunk_id": "c2", "position": 2})
+
+    assert calls == [
+        ("GET", "/reading-positions/d1", None),
+        ("PUT", "/reading-positions/d1", {"chunk_id": "c2", "position": 2}),
+    ]
 
 
 def test_flashcards_forward_to_learning(monkeypatch: pytest.MonkeyPatch) -> None:
