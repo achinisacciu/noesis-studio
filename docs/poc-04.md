@@ -68,7 +68,7 @@ Con `--check` i dati finiscono in `data/check/` e vengono azzerati a ogni esecuz
 - Citazione coerente: stesso `document_id`, sezione `Varianza`, score normalizzato.
 - Rebuild completo dell'indice da SQLite.
 - Delete orchestrato: documento e indice spariti, ricerca successiva senza hit.
-- 36 test unitari (8 document, 7 rag, 13 gateway, 8 ai), `ruff` e `mypy --strict` puliti.
+- 48 test unitari (8 document, 7 rag, 17 gateway, 8 ai, 8 learning), `ruff` e `mypy --strict` puliti.
 - Avvio e arresto dei tre processi senza processi residui.
 
 ## Valutazione delle citazioni
