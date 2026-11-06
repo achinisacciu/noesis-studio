@@ -18,6 +18,7 @@ Piattaforma desktop **local-first** per studiare Statistica, Matematica, ML e De
 | [docs/poc-02.md](docs/poc-02.md) | POC-02/03: adapter AI, Ollama, streaming SSE |
 | [docs/poc-05.md](docs/poc-05.md) | POC-05: shell desktop Tauri 2 e ciclo di vita |
 | [docs/frontend.md](docs/frontend.md) | Client React: import, chat, citazioni |
+| [docs/wiki/README.md](docs/wiki/README.md) | Wiki: mappa delle aree di implementazione |
 | [AGENTS.md](AGENTS.md) | Regole operative per gli agenti di sviluppo |
 
 ## Stack

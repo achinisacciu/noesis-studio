@@ -15,6 +15,7 @@ Prima di qualunque modifica, l'agente deve leggere:
 | `docs/user-stories.md` | Criteri verificabili per ogni funzionalità |
 | `docs/architecture.md` (v0.2) | Architettura, microservizi, persistenza, AI, sandbox |
 | `docs/service-communication.md` (v0.1) | Protocolli, processi, gateway, sicurezza locale |
+| `docs/wiki/README.md` | Wiki di implementazione: dove guardare per area (servizi, frontend, dati, comandi) |
 
 Questo `AGENTS.md` è la **traduzione operativa** di quei documenti: comandi, regole architetturali, DO/DON'T, workflow. In caso di conflitto, prevale il documento di riferimento.
 
@@ -567,6 +568,8 @@ Queste scelte sono **aperte** nei documenti di riferimento. L'agente deve propor
   - viene chiuso un POC con una decisione tecnica;
 
   - cambia la struttura del repository o i comandi canonici;
+
+  - cambia la mappa dei file (nuovo servizio, rotta, tabella o componente): aggiorna `docs/wiki/`;
 
   - emerge una regola ricorrente che vale la pena codificare.
 
