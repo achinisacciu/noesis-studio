@@ -6,7 +6,7 @@ import type { Citation } from "../types";
 interface Props {
   client: ApiClient;
   documentId: string | null;
-  onCitationClick: (documentId: string) => void;
+  onCitationClick: (citation: Citation) => void;
 }
 
 interface Message {
@@ -117,7 +117,7 @@ export function TutorChat({ client, documentId, onCitationClick }: Props) {
                     key={`${citation.document_id}-${position}`}
                     className="citation"
                     title={citation.snippet}
-                    onClick={() => onCitationClick(citation.document_id)}
+                    onClick={() => onCitationClick(citation)}
                   >
                     [{position + 1}] {citationLabel(citation)}
                     {citation.page !== null && citation.section

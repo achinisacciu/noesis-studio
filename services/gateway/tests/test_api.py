@@ -150,6 +150,25 @@ def test_ai_models_forwards(monkeypatch: pytest.MonkeyPatch) -> None:
     assert calls == [("GET", "/models")]
 
 
+def test_chunks_forward_to_document(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[tuple[str, str, str]] = []
+
+    async def fake_forward(
+        method: str, base_url: str, path: str, payload: dict[str, object] | None = None
+    ) -> JSONResponse:
+        calls.append((method, base_url, path))
+        return JSONResponse(
+            status_code=200,
+            content={"status": "success", "data": {"document_id": "d1", "chunks": []}},
+        )
+
+    monkeypatch.setattr(routes, "forward", fake_forward)
+    response = client.get("/api/documents/d1/chunks")
+
+    assert response.status_code == 200
+    assert calls == [("GET", routes.DOCUMENT_URL, "/documents/d1/chunks")]
+
+
 def test_api_requires_token() -> None:
     os.environ["NOESIS_TOKEN"] = "secret"
     response = client.post("/api/rag/search", json={"query": "varianza"})

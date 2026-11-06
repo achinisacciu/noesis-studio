@@ -1,5 +1,5 @@
 import { parseSse } from "./sse";
-import type { Citation, DocumentSummary, TutorEvent } from "./types";
+import type { Chunk, Citation, DocumentSummary, TutorEvent } from "./types";
 
 interface Envelope<T> {
   status: "success" | "error";
@@ -67,8 +67,18 @@ export class ApiClient {
     return this.envelope<DocumentSummary>(response);
   }
 
-  async deleteDocument(documentId: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/documents/${documentId}`, {
+  async getChunks(documentId: string): Promise<Chunk[]> {
+    const response = await fetch(
+      `${this.baseUrl}/api/documents/${documentId}/chunks`,
+      { headers: this.headers() },
+    );
+    const data = await this.envelope<{ document_id: string; chunks: Chunk[] }>(
+      response,
+    );
+    return data.chunks;
+  }
+
+  async deleteDocument(documentId: string): Promise<void> {    const response = await fetch(`${this.baseUrl}/api/documents/${documentId}`, {
       method: "DELETE",
       headers: this.headers(),
     });

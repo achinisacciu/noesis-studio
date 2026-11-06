@@ -35,12 +35,13 @@ corepack pnpm build       # build di produzione in dist/
 - Lista documenti con import PDF/DOCX/MD/TXT, chunk count ed eliminazione.
 - Import che indicizza subito il documento; pulsante per ricostruire l'indice.
 - Chat in streaming SSE con stop, citazioni cliccabili e selezione del documento.
+- Lettore del documento che si apre sulla citazione ed evidenzia il punto citato.
 - Tema scuro e layout responsive.
 
 ## Cosa manca
 
 - Wrapper Tauri 2: per ora l'app gira nel browser.
-- Lettore PDF con apertura alla pagina citata e annotazioni.
+- Rendering del PDF originale: il lettore mostra il testo estratto dai chunk.
 - Impostazioni per gateway, token e modello.
 - Persistenza della conversazione e cronologia.
 - Test E2E Playwright.

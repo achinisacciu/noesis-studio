@@ -6,6 +6,15 @@ export interface DocumentSummary {
   chunk_count: number;
 }
 
+export interface Chunk {
+  id: string;
+  document_id: string;
+  position: number;
+  text: string;
+  page: number | null;
+  section: string | null;
+}
+
 export interface Citation {
   document_id: string;
   page: number | null;

@@ -63,6 +63,13 @@ async def get_document(
     return await forward("GET", DOCUMENT_URL, f"/documents/{document_id}")
 
 
+@api.get("/api/documents/{document_id}/chunks")
+async def get_document_chunks(
+    document_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+) -> JSONResponse:
+    return await forward("GET", DOCUMENT_URL, f"/documents/{document_id}/chunks")
+
+
 @api.delete("/api/documents/{document_id}")
 async def delete_document(
     document_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),

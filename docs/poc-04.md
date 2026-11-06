@@ -48,7 +48,7 @@ DELETE /api/documents/{id}     -> gateway -> rag (indice) -> document (SQLite + 
 | tutti | `GET /health`, `GET /ready` | no |
 | document | `POST /documents` (multipart), `GET /documents`, `GET /documents/{id}`, `GET /documents/{id}/chunks`, `DELETE /documents/{id}` | sì |
 | rag | `POST /index`, `DELETE /index/{id}`, `POST /index/rebuild`, `POST /search` | sì |
-| gateway | `POST /api/documents`, `GET /api/documents`, `GET /api/documents/{id}`, `DELETE /api/documents/{id}`, `POST /api/index/{id}`, `POST /api/index/rebuild`, `POST /api/rag/search` | sì |
+| gateway | `POST /api/documents`, `GET /api/documents`, `GET /api/documents/{id}`, `GET /api/documents/{id}/chunks`, `DELETE /api/documents/{id}`, `POST /api/index/{id}`, `POST /api/index/rebuild`, `POST /api/rag/search` | sì |
 
 Il delete passa prima dal RAG: se l'indice non viene ripulito, il documento non viene eliminato e non restano citazioni orfane.
 
