@@ -1,19 +1,23 @@
 #!/usr/bin/env python
-"""POC-01: avvia Document, RAG e Gateway come processi locali indipendenti."""
+"""Avvia Document, RAG e Gateway come processi locali e verifica il flusso completo.
+
+Flusso `--check`: import file -> indice -> ricerca con citazione -> rebuild -> delete.
+"""
 import argparse
 import json
 import os
 import secrets
+import shutil
 import socket
 import subprocess
 import sys
 import time
 import urllib.error
 import urllib.request
+import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-LOGS = ROOT / "data" / "logs" / "poc01"
 SERVICES = ("document", "rag", "gateway")
 
 
@@ -30,7 +34,11 @@ def python_for(service: str) -> Path:
 
 
 def request(
-    method: str, url: str, token: str, payload: dict[str, object] | None = None
+    method: str,
+    url: str,
+    token: str,
+    payload: dict[str, object] | None = None,
+    timeout: float = 10,
 ) -> tuple[int, dict[str, object]]:
     data = json.dumps(payload).encode() if payload is not None else None
     req = urllib.request.Request(url, data=data, method=method)
@@ -38,7 +46,24 @@ def request(
     if data is not None:
         req.add_header("Content-Type", "application/json")
     try:
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            return response.status, json.load(response)
+    except urllib.error.HTTPError as error:
+        return error.code, json.load(error)
+
+
+def upload(url: str, token: str, filename: str, content: bytes) -> tuple[int, dict[str, object]]:
+    boundary = uuid.uuid4().hex
+    body = (
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+        "Content-Type: text/markdown\r\n\r\n"
+    ).encode() + content + f"\r\n--{boundary}--\r\n".encode()
+    req = urllib.request.Request(url, data=body, method="POST")
+    req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("Content-Type", f"multipart/form-data; boundary={boundary}")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as response:
             return response.status, json.load(response)
     except urllib.error.HTTPError as error:
         return error.code, json.load(error)
@@ -57,11 +82,74 @@ def wait_ready(url: str, timeout: float = 60) -> None:
     raise SystemExit(f"servizio non pronto: {url}")
 
 
+def check_flow(gateway: str, token: str) -> None:
+    markdown = "# Varianza\n\nLa varianza misura la dispersione dei dati.\n"
+
+    status, body = upload(
+        f"{gateway}/api/documents", token, "statistica.md", markdown.encode()
+    )
+    assert status == 200, body
+    document = body["data"]
+    assert isinstance(document, dict)
+    document_id = document["id"]
+    assert isinstance(document_id, str)
+    assert document["chunk_count"] == 1, document
+
+    status, body = request("GET", f"{gateway}/api/documents", token)
+    assert status == 200, body
+    assert [item["id"] for item in body["data"]] == [document_id], body
+
+    status, body = request("POST", f"{gateway}/api/index/{document_id}", token)
+    assert status == 200 and body["data"]["chunks"] == 1, body
+
+    status, body = request(
+        "POST",
+        f"{gateway}/api/rag/search",
+        token,
+        {"query": "dispersione", "document_id": document_id},
+    )
+    assert status == 200, body
+    hits = body["data"]["hits"]
+    assert hits, body
+    citation = hits[0]
+    assert citation["document_id"] == document_id, citation
+    assert citation["section"] == "Varianza", citation
+    assert 0 < citation["score"] <= 1, citation
+
+    status, body = request("POST", f"{gateway}/api/index/rebuild", token)
+    assert status == 200 and body["data"] == {"documents": 1, "chunks": 1}, body
+
+    status, body = request("DELETE", f"{gateway}/api/documents/{document_id}", token)
+    assert status == 200, body
+
+    status, body = request("GET", f"{gateway}/api/documents/{document_id}", token)
+    assert status == 404, body
+    status, body = request("POST", f"{gateway}/api/rag/search", token, {"query": "dispersione"})
+    assert status == 200 and body["data"]["hits"] == [], body
+
+    print(
+        f"gateway   ok     import + indice + ricerca + rebuild + delete "
+        f"(citazione: {citation['section']}, score {citation['score']})"
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="esegue il flusso completo ed esce")
     parser.add_argument("--no-sync", action="store_true", help="salta uv sync")
+    parser.add_argument(
+        "--data",
+        type=Path,
+        help="cartella dati condivisa (default: data/; con --check viene isolata e pulita)",
+    )
     args = parser.parse_args()
+
+    data_dir = (args.data or ROOT / "data").resolve()
+    if args.check:
+        data_dir = data_dir / "check"
+        shutil.rmtree(data_dir, ignore_errors=True)
+    data_dir.mkdir(parents=True, exist_ok=True)
+    logs = data_dir / "logs"
 
     if not args.no_sync:
         for service in SERVICES:
@@ -81,11 +169,12 @@ def main() -> int:
     token = secrets.token_urlsafe(24)
     ports = {service: free_port() for service in SERVICES}
     urls = {service: f"http://127.0.0.1:{ports[service]}" for service in SERVICES}
-    LOGS.mkdir(parents=True, exist_ok=True)
+    logs.mkdir(parents=True, exist_ok=True)
 
     env = {
         **os.environ,
         "NOESIS_TOKEN": token,
+        "NOESIS_DATA": str(data_dir),
         "DOCUMENT_URL": urls["document"],
         "RAG_URL": urls["rag"],
         "PYTHONUNBUFFERED": "1",
@@ -93,7 +182,7 @@ def main() -> int:
     processes: dict[str, subprocess.Popen[bytes]] = {}
     try:
         for service in SERVICES:
-            log = (LOGS / f"{service}.log").open("wb")
+            log = (logs / f"{service}.log").open("wb")
             processes[service] = subprocess.Popen(
                 [
                     str(python_for(service)),
@@ -117,28 +206,7 @@ def main() -> int:
             print(f"{service:9} ready  {urls[service]}")
 
         if args.check:
-            status, body = request(
-                "POST",
-                f"{urls['gateway']}/api/documents",
-                token,
-                {"title": "Statistica", "text": "La media è 3. La varianza misura la dispersione."},
-            )
-            assert status == 200, body
-            document = body["data"]
-            assert isinstance(document, dict)
-            document_id = document["id"]
-            assert isinstance(document_id, str)
-
-            status, body = request(
-                "POST",
-                f"{urls['gateway']}/api/rag/search",
-                token,
-                {"query": "varianza", "document_id": document_id},
-            )
-            assert status == 200, body
-            hits = body["data"]["hits"]
-            assert hits and "varianza" in hits[0]["text"].lower(), body
-            print(f"gateway   ok     documento {document_id} -> {len(hits)} citazione/i")
+            check_flow(urls["gateway"], token)
             return 0
 
         print("Ctrl+C per arrestare i servizi.")
@@ -157,4 +225,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

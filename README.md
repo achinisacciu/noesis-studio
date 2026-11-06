@@ -2,7 +2,7 @@
 
 Piattaforma desktop **local-first** per studiare Statistica, Matematica, ML e Deep Learning: lettore di documenti, tutor IA con RAG citazionale, notebook Python in sandbox, flashcard e quiz.
 
-**Stato:** POC-01 completato (microservizi locali). Nessuna funzionalità MVP ancora implementata.
+**Stato:** POC-04 completato (persistenza SQLite + ChromaDB, RAG con citazioni). Nessuna funzionalità MVP ancora implementata.
 
 ## Documenti
 
@@ -14,6 +14,7 @@ Piattaforma desktop **local-first** per studiare Statistica, Matematica, ML e De
 | [docs/architecture.md](docs/architecture.md) | Architettura, microservizi, persistenza, AI, sandbox |
 | [docs/service-communication.md](docs/service-communication.md) | Protocolli, processo, gateway, sicurezza locale |
 | [docs/poc-01.md](docs/poc-01.md) | POC-01: microservizi locali, esito e limiti |
+| [docs/poc-04.md](docs/poc-04.md) | POC-04: SQLite + ChromaDB, RAG con citazioni |
 | [AGENTS.md](AGENTS.md) | Regole operative per gli agenti di sviluppo |
 
 ## Stack
@@ -34,11 +35,11 @@ La struttura target completa è in [AGENTS.md §4](AGENTS.md#4-struttura-del-rep
 
 Prerequisiti: Python 3.11+, `uv`. Per il desktop serviranno anche Node 22+, `pnpm` e Rust.
 
-Avvio del POC-01:
+Avvio dello stack locale:
 
 ```bash
-python scripts/poc01.py --check   # avvia i servizi, verifica il flusso completo, arresta
-python scripts/poc01.py           # avvia e resta attivo fino a Ctrl+C
+python scripts/stack.py --check   # avvia i servizi, verifica il flusso completo, arresta
+python scripts/stack.py           # avvia e resta attivo fino a Ctrl+C
 ```
 
 Test di un servizio:
@@ -50,7 +51,7 @@ uv run ruff check . && uv run ruff format --check .
 uv run mypy app
 ```
 
-Dettagli e limiti in [docs/poc-01.md](docs/poc-01.md).
+Dettagli e limiti in [docs/poc-04.md](docs/poc-04.md); il primo prototipo è in [docs/poc-01.md](docs/poc-01.md).
 
 Aggiornamento della skill ponytail:
 

@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI, Request, Response
 
-from app.api.routes import router
+from app.api.routes import api, router
 from app.core.errors import install_error_handlers
 
 SERVICE = "document-service"
@@ -19,6 +19,7 @@ def create_app() -> FastAPI:
     app = FastAPI(title=SERVICE, version="0.1.0")
     install_error_handlers(app)
     app.include_router(router)
+    app.include_router(api)
 
     @app.middleware("http")
     async def request_context(

@@ -11,7 +11,7 @@
 | RAG Service | `services/rag` | Riceve una query, chiede il documento al Document Service, restituisce le frasi pertinenti |
 | Local API Gateway | `services/gateway` | Unico punto di accesso: proxy verso i servizi e readiness aggregata |
 | Contratti | `packages/contracts` | Modelli Pydantic condivisi, nessuna logica |
-| Supervisore | `scripts/poc01.py` | Avvia i tre processi su porte libere, attende `/ready`, arresta tutto |
+| Supervisore | `scripts/stack.py` | Avvia i tre processi su porte libere, attende `/ready`, arresta tutto |
 
 Flusso verificato dal supervisore:
 
@@ -40,11 +40,13 @@ Gli errori usano le categorie di `docs/service-communication.md` §4.3. Il 404 �
 ## Esecuzione
 
 ```bash
-python scripts/poc01.py --check   # avvia, verifica il flusso completo, arresta
-python scripts/poc01.py           # avvia e resta attivo fino a Ctrl+C
+python scripts/stack.py --check   # avvia, verifica il flusso completo, arresta
+python scripts/stack.py           # avvia e resta attivo fino a Ctrl+C
 ```
 
-Log dei servizi in `data/logs/poc01/`. I servizi si avviano con `NOESIS_TOKEN` condiviso generato dal supervisore.
+Log dei servizi in `data/logs/`. I servizi si avviano con `NOESIS_TOKEN` condiviso generato dal supervisore.
+
+> Il supervisore è oggi `scripts/stack.py`, che verifica anche il flusso POC-04 (import file, indice, ricerca con citazioni). I comandi originali `scripts/poc01.py` non esistono più.
 
 Test e controlli, per singolo servizio:
 

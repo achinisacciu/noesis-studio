@@ -15,21 +15,80 @@ def clean_env() -> None:
     os.environ.pop("NOESIS_TOKEN", None)
 
 
-def test_create_document_forwards(monkeypatch: pytest.MonkeyPatch) -> None:
-    calls: list[tuple[str, str, str, dict[str, object] | None]] = []
+def test_import_forwards_file(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[tuple[str, str, str, str, bytes]] = []
+
+    async def fake_forward_file(
+        method: str,
+        base_url: str,
+        path: str,
+        filename: str,
+        content: bytes,
+        content_type: str,
+    ) -> JSONResponse:
+        calls.append((method, base_url, path, filename, content))
+        return JSONResponse(status_code=200, content={"status": "success", "data": {"id": "x"}})
+
+    monkeypatch.setattr(routes, "forward_file", fake_forward_file)
+    response = client.post(
+        "/api/documents", files={"file": ("note.md", b"# Titolo\ntesto", "text/markdown")}
+    )
+
+    assert response.status_code == 200
+    assert calls == [("POST", routes.DOCUMENT_URL, "/documents", "note.md", b"# Titolo\ntesto")]
+
+
+def test_delete_cleans_index_before_document(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[tuple[str, str, str]] = []
 
     async def fake_forward(
         method: str, base_url: str, path: str, payload: dict[str, object] | None = None
     ) -> JSONResponse:
-        calls.append((method, base_url, path, payload))
-        return JSONResponse(status_code=200, content={"status": "success", "data": {"id": "x"}})
+        calls.append((method, base_url, path))
+        return JSONResponse(status_code=200, content={"status": "success", "data": {"id": "d1"}})
 
     monkeypatch.setattr(routes, "forward", fake_forward)
-    response = client.post("/api/documents", json={"title": "t", "text": "contenuto"})
+    response = client.delete("/api/documents/d1")
 
     assert response.status_code == 200
     assert calls == [
-        ("POST", routes.DOCUMENT_URL, "/documents", {"title": "t", "text": "contenuto"})
+        ("DELETE", routes.RAG_URL, "/index/d1"),
+        ("DELETE", routes.DOCUMENT_URL, "/documents/d1"),
+    ]
+
+
+def test_delete_aborts_when_index_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[str] = []
+
+    async def fake_forward(
+        method: str, base_url: str, path: str, payload: dict[str, object] | None = None
+    ) -> JSONResponse:
+        calls.append(path)
+        return JSONResponse(status_code=502, content={"status": "error"})
+
+    monkeypatch.setattr(routes, "forward", fake_forward)
+    response = client.delete("/api/documents/d1")
+
+    assert response.status_code == 502
+    assert calls == ["/index/d1"]
+
+
+def test_index_and_rebuild_forward(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[tuple[str, str, dict[str, object] | None]] = []
+
+    async def fake_forward(
+        method: str, base_url: str, path: str, payload: dict[str, object] | None = None
+    ) -> JSONResponse:
+        calls.append((method, path, payload))
+        return JSONResponse(status_code=200, content={"status": "success", "data": {}})
+
+    monkeypatch.setattr(routes, "forward", fake_forward)
+    client.post("/api/index/d1")
+    client.post("/api/index/rebuild")
+
+    assert calls == [
+        ("POST", "/index", {"document_id": "d1"}),
+        ("POST", "/index/rebuild", None),
     ]
 
 
@@ -43,7 +102,7 @@ def test_rag_search_forwards(monkeypatch: pytest.MonkeyPatch) -> None:
         return JSONResponse(status_code=200, content={"status": "success", "data": {"hits": []}})
 
     monkeypatch.setattr(routes, "forward", fake_forward)
-    response = client.post("/api/rag/search", json={"query": "varianza", "document_id": "d1"})
+    response = client.post("/api/rag/search", json={"query": "varianza"})
 
     assert response.status_code == 200
     assert calls == [("POST", routes.RAG_URL, "/search")]
@@ -51,7 +110,7 @@ def test_rag_search_forwards(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_api_requires_token() -> None:
     os.environ["NOESIS_TOKEN"] = "secret"
-    response = client.post("/api/rag/search", json={"query": "varianza", "document_id": "d1"})
+    response = client.post("/api/rag/search", json={"query": "varianza"})
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "VALIDATION_ERROR"
 

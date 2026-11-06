@@ -1,12 +1,15 @@
 import asyncio
 import os
+from pathlib import Path
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import Path as PathParam
 from fastapi.responses import JSONResponse
-from noesis_contracts import ApiResponse, DocumentCreate, HealthStatus, SearchRequest
+from noesis_contracts import ApiResponse, HealthStatus, SearchRequest
 
 from app.core.security import require_token
-from app.proxy import check, forward
+from app.proxy import check, forward, forward_file
 
 DOCUMENT_URL = os.getenv("DOCUMENT_URL", "http://127.0.0.1:8002")
 RAG_URL = os.getenv("RAG_URL", "http://127.0.0.1:8003")
@@ -32,15 +35,54 @@ async def ready() -> JSONResponse:
 
 
 @api.post("/api/documents")
-async def create_document(payload: DocumentCreate) -> JSONResponse:
-    return await forward("POST", DOCUMENT_URL, "/documents", payload.model_dump(mode="json"))
+async def import_document(file: Annotated[UploadFile, File()]) -> JSONResponse:
+    filename = Path(file.filename or "").name
+    if not filename:
+        raise HTTPException(status_code=422, detail="nome file mancante")
+    content = await file.read()
+    return await forward_file(
+        "POST",
+        DOCUMENT_URL,
+        "/documents",
+        filename=filename,
+        content=content,
+        content_type=file.content_type or "application/octet-stream",
+    )
+
+
+@api.get("/api/documents")
+async def list_documents() -> JSONResponse:
+    return await forward("GET", DOCUMENT_URL, "/documents")
 
 
 @api.get("/api/documents/{document_id}")
 async def get_document(
-    document_id: str = Path(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+    document_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
 ) -> JSONResponse:
     return await forward("GET", DOCUMENT_URL, f"/documents/{document_id}")
+
+
+@api.delete("/api/documents/{document_id}")
+async def delete_document(
+    document_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+) -> JSONResponse:
+    # l'indice è derivato: va ripulito prima, altrimenti restano citazioni orfane
+    indexed = await forward("DELETE", RAG_URL, f"/index/{document_id}")
+    if indexed.status_code >= 500:
+        raise HTTPException(status_code=502, detail="indice non ripulito, documento non eliminato")
+    return await forward("DELETE", DOCUMENT_URL, f"/documents/{document_id}")
+
+
+@api.post("/api/index/rebuild")
+async def rebuild_index() -> JSONResponse:
+    return await forward("POST", RAG_URL, "/index/rebuild")
+
+
+@api.post("/api/index/{document_id}")
+async def index_document(
+    document_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+) -> JSONResponse:
+    return await forward("POST", RAG_URL, "/index", {"document_id": document_id})
 
 
 @api.post("/api/rag/search")

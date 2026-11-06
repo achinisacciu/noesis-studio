@@ -3,7 +3,14 @@ name = "noesis-document"
 version = "0.1.0"
 description = "Document Service: import e recupero documenti"
 requires-python = ">=3.11"
-dependencies = ["fastapi>=0.115", "uvicorn>=0.32", "noesis-contracts"]
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "python-multipart>=0.0.9",
+    "pymupdf>=1.24",
+    "python-docx>=1.1",
+    "noesis-contracts",
+]
 
 [dependency-groups]
 dev = ["pytest>=8", "httpx2", "ruff>=0.7", "mypy>=1.13"]
@@ -18,3 +25,4 @@ target-version = "py311"
 [tool.mypy]
 python_version = "3.11"
 strict = true
+

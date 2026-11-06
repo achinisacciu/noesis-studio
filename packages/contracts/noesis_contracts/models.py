@@ -32,28 +32,56 @@ class HealthStatus(BaseModel):
     service: str
 
 
-class DocumentCreate(BaseModel):
-    title: str = Field(min_length=1, max_length=200)
-    text: str = Field(min_length=1)
-
-
-class Document(BaseModel):
+class DocumentSummary(BaseModel):
     id: str
     title: str
-    text: str
+    filename: str
     created_at: datetime
+    chunk_count: int
+
+
+class Chunk(BaseModel):
+    id: str
+    document_id: str
+    position: int
+    text: str
+    page: int | None = None
+    section: str | None = None
+
+
+class DocumentChunks(BaseModel):
+    document_id: str
+    chunks: list[Chunk]
+
+
+class IndexRequest(BaseModel):
+    document_id: str
+
+
+class IndexResponse(BaseModel):
+    document_id: str
+    chunks: int
+
+
+class RebuildResponse(BaseModel):
+    documents: int
+    chunks: int
 
 
 class SearchRequest(BaseModel):
     query: str = Field(min_length=1, max_length=500)
-    document_id: str
+    document_id: str | None = None
+    limit: int = Field(default=5, ge=1, le=20)
 
 
 class SearchHit(BaseModel):
+    document_id: str
     text: str
-    position: int
+    page: int | None = None
+    section: str | None = None
+    score: float
 
 
 class SearchResponse(BaseModel):
-    document_id: str
+    query: str
     hits: list[SearchHit]
