@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
-from noesis_contracts import Chunk, DocumentSummary
+from noesis_contracts import Annotation, AnnotationCreate, Chunk, DocumentSummary
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS documents (
@@ -23,6 +23,17 @@ CREATE TABLE IF NOT EXISTS chunks (
     section TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_chunks_document ON chunks(document_id);
+CREATE TABLE IF NOT EXISTS annotations (
+    id TEXT PRIMARY KEY,
+    document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    chunk_id TEXT NOT NULL REFERENCES chunks(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL,
+    start INTEGER NOT NULL DEFAULT 0,
+    end INTEGER NOT NULL DEFAULT 0,
+    note TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_annotations_document ON annotations(document_id);
 """
 
 
@@ -129,6 +140,74 @@ class Store:
             )
             for row in rows
         ]
+
+    def chunk_text(self, document_id: str, chunk_id: str) -> str | None:
+        with self._db() as conn:
+            row = conn.execute(
+                "SELECT text FROM chunks WHERE id = ? AND document_id = ?",
+                (chunk_id, document_id),
+            ).fetchone()
+        return row["text"] if row else None
+
+    @staticmethod
+    def _annotation(row: sqlite3.Row) -> Annotation:
+        return Annotation(
+            id=row["id"],
+            document_id=row["document_id"],
+            chunk_id=row["chunk_id"],
+            kind=row["kind"],
+            start=row["start"],
+            end=row["end"],
+            note=row["note"],
+            created_at=datetime.fromisoformat(row["created_at"]),
+        )
+
+    def annotations(self, document_id: str) -> list[Annotation]:
+        with self._db() as conn:
+            rows = conn.execute(
+                "SELECT * FROM annotations WHERE document_id = ? ORDER BY created_at, id",
+                (document_id,),
+            ).fetchall()
+        return [self._annotation(row) for row in rows]
+
+    def add_annotation(
+        self,
+        annotation_id: str,
+        document_id: str,
+        payload: AnnotationCreate,
+        created_at: datetime,
+    ) -> Annotation:
+        with self._db() as conn:
+            conn.execute(
+                "INSERT INTO annotations"
+                " (id, document_id, chunk_id, kind, start, end, note, created_at)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    annotation_id,
+                    document_id,
+                    payload.chunk_id,
+                    payload.kind,
+                    payload.start,
+                    payload.end,
+                    payload.note,
+                    created_at.isoformat(),
+                ),
+            )
+        return Annotation(
+            id=annotation_id,
+            document_id=document_id,
+            chunk_id=payload.chunk_id,
+            kind=payload.kind,
+            start=payload.start,
+            end=payload.end,
+            note=payload.note,
+            created_at=created_at,
+        )
+
+    def delete_annotation(self, annotation_id: str) -> bool:
+        with self._db() as conn:
+            cursor = conn.execute("DELETE FROM annotations WHERE id = ?", (annotation_id,))
+            return cursor.rowcount > 0
 
     def delete(self, document_id: str) -> bool:
         with self._db() as conn:

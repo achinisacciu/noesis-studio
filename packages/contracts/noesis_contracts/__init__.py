@@ -1,4 +1,8 @@
 from .models import (
+    Annotation,
+    AnnotationCreate,
+    AnnotationKind,
+    AnnotationList,
     ApiError,
     ApiResponse,
     Chunk,
@@ -28,6 +32,10 @@ from .models import (
 )
 
 __all__ = [
+    "Annotation",
+    "AnnotationCreate",
+    "AnnotationKind",
+    "AnnotationList",
     "ApiError",
     "ApiResponse",
     "Chunk",

@@ -54,6 +54,32 @@ class DocumentChunks(BaseModel):
     chunks: list[Chunk]
 
 
+AnnotationKind = Literal["highlight", "note", "bookmark"]
+
+
+class Annotation(BaseModel):
+    id: str
+    document_id: str
+    chunk_id: str
+    kind: AnnotationKind
+    start: int
+    end: int
+    note: str
+    created_at: datetime
+
+
+class AnnotationCreate(BaseModel):
+    chunk_id: str = Field(min_length=1, max_length=128)
+    kind: AnnotationKind = "highlight"
+    start: int = Field(default=0, ge=0)
+    end: int = Field(default=0, ge=0)
+    note: str = Field(default="", max_length=2000)
+
+
+class AnnotationList(BaseModel):
+    annotations: list[Annotation]
+
+
 class IndexRequest(BaseModel):
     document_id: str
 

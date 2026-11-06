@@ -195,6 +195,23 @@ def check_flow(gateway: str, token: str) -> None:
     assert status == 200 and body["data"]["position"]["position"] == 2, body
     print("gateway   ok     posizione di lettura salvata e riletta")
 
+    status, body = request("GET", f"{gateway}/api/documents/{document_id}/chunks", token)
+    assert status == 200, body
+    chunk_id = body["data"]["chunks"][0]["id"]
+    status, body = request(
+        "POST",
+        f"{gateway}/api/documents/{document_id}/annotations",
+        token,
+        {"chunk_id": chunk_id, "kind": "highlight", "start": 3, "end": 11, "note": "definizione"},
+    )
+    assert status == 200 and body["data"]["kind"] == "highlight", body
+    annotation_id = body["data"]["id"]
+    status, body = request("GET", f"{gateway}/api/documents/{document_id}/annotations", token)
+    assert status == 200 and len(body["data"]["annotations"]) == 1, body
+    status, body = request("DELETE", f"{gateway}/api/annotations/{annotation_id}", token)
+    assert status == 200, body
+    print("gateway   ok     annotazioni create + list + delete")
+
     status, body = request("DELETE", f"{gateway}/api/documents/{document_id}", token)
     assert status == 200, body
     status, body = request("GET", f"{gateway}/api/flashcards?document_id={document_id}", token)

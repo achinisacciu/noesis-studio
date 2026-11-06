@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi import Path as PathParam
 from fastapi.responses import JSONResponse, StreamingResponse
 from noesis_contracts import (
+    AnnotationCreate,
     ApiResponse,
     FlashcardCreate,
     FlashcardUpdate,
@@ -108,6 +109,33 @@ async def index_document(
     document_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
 ) -> JSONResponse:
     return await forward("POST", RAG_URL, "/index", {"document_id": document_id})
+
+
+@api.get("/api/documents/{document_id}/annotations")
+async def list_annotations(
+    document_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+) -> JSONResponse:
+    return await forward("GET", DOCUMENT_URL, f"/documents/{document_id}/annotations")
+
+
+@api.post("/api/documents/{document_id}/annotations")
+async def create_annotation(
+    payload: AnnotationCreate,
+    document_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+) -> JSONResponse:
+    return await forward(
+        "POST",
+        DOCUMENT_URL,
+        f"/documents/{document_id}/annotations",
+        payload.model_dump(mode="json", exclude_none=True),
+    )
+
+
+@api.delete("/api/annotations/{annotation_id}")
+async def delete_annotation(
+    annotation_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+) -> JSONResponse:
+    return await forward("DELETE", DOCUMENT_URL, f"/annotations/{annotation_id}")
 
 
 @api.post("/api/rag/search")

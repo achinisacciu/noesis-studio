@@ -114,3 +114,80 @@ def test_health_and_ready() -> None:
         response = client.get(path)
         assert response.status_code == 200
         assert response.json()["data"]["status"] == "healthy"
+
+
+def test_annotations_are_listed_and_deleted() -> None:
+    document = import_markdown()
+    document_id = str(document["id"])
+    chunks = client.get(f"/documents/{document_id}/chunks").json()["data"]["chunks"]
+
+    created = client.post(
+        f"/documents/{document_id}/annotations",
+        json={
+            "chunk_id": chunks[0]["id"],
+            "kind": "highlight",
+            "start": 3,
+            "end": 11,
+            "note": "definizione",
+        },
+    )
+    assert created.status_code == 200
+    annotation = created.json()["data"]
+    assert annotation["kind"] == "highlight"
+    assert annotation["note"] == "definizione"
+
+    listed = client.get(f"/documents/{document_id}/annotations")
+    assert listed.status_code == 200
+    assert [item["id"] for item in listed.json()["data"]["annotations"]] == [annotation["id"]]
+
+    deleted = client.delete(f"/annotations/{annotation['id']}")
+    assert deleted.status_code == 200
+    assert client.get(f"/documents/{document_id}/annotations").json()["data"]["annotations"] == []
+
+
+def test_annotation_ranges_are_validated() -> None:
+    document = import_markdown()
+    document_id = str(document["id"])
+    chunks = client.get(f"/documents/{document_id}/chunks").json()["data"]["chunks"]
+    url = f"/documents/{document_id}/annotations"
+
+    empty_range = client.post(
+        url, json={"chunk_id": chunks[0]["id"], "kind": "highlight", "start": 5, "end": 5}
+    )
+    assert empty_range.status_code == 422
+
+    beyond_text = client.post(
+        url, json={"chunk_id": chunks[0]["id"], "kind": "highlight", "start": 0, "end": 500}
+    )
+    assert beyond_text.status_code == 422
+
+    bookmark = client.post(url, json={"chunk_id": chunks[0]["id"], "kind": "bookmark"})
+    assert bookmark.status_code == 200
+
+    bookmark_range = client.post(
+        url,
+        json={"chunk_id": chunks[0]["id"], "kind": "bookmark", "start": 1, "end": 2},
+    )
+    assert bookmark_range.status_code == 422
+
+    empty_note = client.post(
+        url,
+        json={"chunk_id": chunks[0]["id"], "kind": "note", "start": 0, "end": 5, "note": "  "},
+    )
+    assert empty_note.status_code == 422
+
+    unknown_chunk = client.post(url, json={"chunk_id": "nope", "kind": "bookmark"})
+    assert unknown_chunk.status_code == 404
+
+
+def test_document_delete_removes_annotations() -> None:
+    document = import_markdown()
+    document_id = str(document["id"])
+    chunks = client.get(f"/documents/{document_id}/chunks").json()["data"]["chunks"]
+    client.post(
+        f"/documents/{document_id}/annotations",
+        json={"chunk_id": chunks[0]["id"], "kind": "bookmark"},
+    )
+
+    assert client.delete(f"/documents/{document_id}").status_code == 200
+    assert routes.store.annotations(document_id) == []

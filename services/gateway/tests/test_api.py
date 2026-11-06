@@ -252,6 +252,35 @@ def test_flashcards_forward_to_learning(monkeypatch: pytest.MonkeyPatch) -> None
     ]
 
 
+def test_annotations_forward_to_document(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[tuple[str, str, dict[str, object] | None]] = []
+
+    async def fake_forward(
+        method: str, base_url: str, path: str, payload: dict[str, object] | None = None
+    ) -> JSONResponse:
+        calls.append((method, path, payload))
+        return JSONResponse(status_code=200, content={"status": "success", "data": {}})
+
+    monkeypatch.setattr(routes, "forward", fake_forward)
+
+    client.get("/api/documents/d1/annotations")
+    client.post(
+        "/api/documents/d1/annotations",
+        json={"chunk_id": "d1:0", "kind": "highlight", "start": 3, "end": 11},
+    )
+    client.delete("/api/annotations/a1")
+
+    assert calls == [
+        ("GET", "/documents/d1/annotations", None),
+        (
+            "POST",
+            "/documents/d1/annotations",
+            {"chunk_id": "d1:0", "kind": "highlight", "start": 3, "end": 11, "note": ""},
+        ),
+        ("DELETE", "/annotations/a1", None),
+    ]
+
+
 def test_api_requires_token() -> None:
     os.environ["NOESIS_TOKEN"] = "secret"
     response = client.post("/api/rag/search", json={"query": "varianza"})

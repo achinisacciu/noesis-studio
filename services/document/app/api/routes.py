@@ -8,6 +8,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi import Path as PathParam
 from noesis_contracts import (
+    Annotation,
+    AnnotationCreate,
+    AnnotationList,
     ApiResponse,
     DocumentChunks,
     DocumentSummary,
@@ -107,3 +110,54 @@ async def delete_document(
     if not store.delete(document_id):
         raise HTTPException(status_code=404, detail="documento non trovato")
     return ApiResponse(data={"id": document_id})
+
+
+@api.get(
+    "/documents/{document_id}/annotations",
+    response_model=ApiResponse[AnnotationList],
+)
+async def list_annotations(
+    document_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+) -> ApiResponse[AnnotationList]:
+    if store.get(document_id) is None:
+        raise HTTPException(status_code=404, detail="documento non trovato")
+    return ApiResponse(data=AnnotationList(annotations=store.annotations(document_id)))
+
+
+@api.post(
+    "/documents/{document_id}/annotations",
+    response_model=ApiResponse[Annotation],
+)
+async def create_annotation(
+    payload: AnnotationCreate,
+    document_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+) -> ApiResponse[Annotation]:
+    if store.get(document_id) is None:
+        raise HTTPException(status_code=404, detail="documento non trovato")
+
+    text = store.chunk_text(document_id, payload.chunk_id)
+    if text is None:
+        raise HTTPException(status_code=404, detail="passaggio non trovato")
+
+    # gli offset arrivano dal browser e sono in unità UTF-16, non in code point
+    length = len(text.encode("utf-16-le")) // 2
+    if payload.kind == "bookmark":
+        if payload.start or payload.end:
+            raise HTTPException(status_code=422, detail="un segnalibro non ha intervallo")
+    elif payload.end <= payload.start or payload.end > length:
+        raise HTTPException(status_code=422, detail="intervallo non valido")
+
+    if payload.kind == "note" and not payload.note.strip():
+        raise HTTPException(status_code=422, detail="la nota è vuota")
+
+    annotation = store.add_annotation(uuid.uuid4().hex, document_id, payload, datetime.now(UTC))
+    return ApiResponse(data=annotation)
+
+
+@api.delete("/annotations/{annotation_id}", response_model=ApiResponse[dict[str, str]])
+async def delete_annotation(
+    annotation_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+) -> ApiResponse[dict[str, str]]:
+    if not store.delete_annotation(annotation_id):
+        raise HTTPException(status_code=404, detail="annotazione non trovata")
+    return ApiResponse(data={"id": annotation_id})
