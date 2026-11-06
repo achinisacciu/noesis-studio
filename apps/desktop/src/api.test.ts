@@ -56,6 +56,50 @@ describe("ApiClient", () => {
     );
   });
 
+  it("crea e legge le flashcard dal gateway", async () => {
+    const card = {
+      id: "c1",
+      document_id: "d1",
+      front: "Che cosa misura la varianza?",
+      back: "La dispersione.",
+      page: null,
+      section: "Varianza",
+      created_at: "2026-01-01T00:00:00Z",
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ status: "success", data: { cards: [card] } }), {
+          status: 200,
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ status: "success", data: card }), { status: 200 }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const cards = await client.listFlashcards("d1");
+    const created = await client.createFlashcard({
+      document_id: "d1",
+      front: "Che cosa misura la varianza?",
+      back: "La dispersione.",
+    });
+
+    expect(cards.map((item) => item.id)).toEqual(["c1"]);
+    expect(created.id).toBe("c1");
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "http://gateway.test/api/flashcards?document_id=d1", {
+      headers: { Authorization: "Bearer secret" },
+    });
+    expect(fetchMock.mock.calls[1]?.[1]).toMatchObject({
+      method: "POST",
+      body: JSON.stringify({
+        document_id: "d1",
+        front: "Che cosa misura la varianza?",
+        back: "La dispersione.",
+      }),
+    });
+  });
+
   it("trasforma lo stream SSE negli eventi del tutor", async () => {
     const body = [
       'event: citation\ndata: {"citation":{"document_id":"d1","page":2,"section":"Varianza","snippet":"..."}}\n\n',

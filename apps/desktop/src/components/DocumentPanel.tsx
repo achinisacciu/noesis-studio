@@ -48,7 +48,10 @@ export function DocumentPanel({ client, selectedId, onSelect }: Props) {
       if (document.id === selectedId) onSelect(null);
     },
     onError: (mutationError) => setError(errorMessage(mutationError)),
-    onSettled: refresh,
+    onSettled: () => {
+      refresh();
+      void queryClient.invalidateQueries({ queryKey: ["flashcards"] });
+    },
   });
 
   const rebuildMutation = useMutation({

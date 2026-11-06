@@ -1,5 +1,12 @@
 import { parseSse } from "./sse";
-import type { Chunk, Citation, DocumentSummary, TutorEvent } from "./types";
+import type {
+  Chunk,
+  Citation,
+  DocumentSummary,
+  Flashcard,
+  FlashcardInput,
+  TutorEvent,
+} from "./types";
 
 interface Envelope<T> {
   status: "success" | "error";
@@ -78,7 +85,8 @@ export class ApiClient {
     return data.chunks;
   }
 
-  async deleteDocument(documentId: string): Promise<void> {    const response = await fetch(`${this.baseUrl}/api/documents/${documentId}`, {
+  async deleteDocument(documentId: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/api/documents/${documentId}`, {
       method: "DELETE",
       headers: this.headers(),
     });
@@ -102,6 +110,44 @@ export class ApiClient {
       headers: this.headers(),
     });
     await this.envelope<{ documents: number; chunks: number }>(response);
+  }
+
+  async listFlashcards(documentId: string | null = null): Promise<Flashcard[]> {
+    const query = documentId ? `?document_id=${encodeURIComponent(documentId)}` : "";
+    const response = await fetch(`${this.baseUrl}/api/flashcards${query}`, {
+      headers: this.headers(),
+    });
+    const data = await this.envelope<{ cards: Flashcard[] }>(response);
+    return data.cards;
+  }
+
+  async createFlashcard(input: FlashcardInput): Promise<Flashcard> {
+    const response = await fetch(`${this.baseUrl}/api/flashcards`, {
+      method: "POST",
+      headers: this.headers({ "Content-Type": "application/json" }),
+      body: JSON.stringify(input),
+    });
+    return this.envelope<Flashcard>(response);
+  }
+
+  async updateFlashcard(
+    cardId: string,
+    patch: { front?: string; back?: string },
+  ): Promise<Flashcard> {
+    const response = await fetch(`${this.baseUrl}/api/flashcards/${cardId}`, {
+      method: "PATCH",
+      headers: this.headers({ "Content-Type": "application/json" }),
+      body: JSON.stringify(patch),
+    });
+    return this.envelope<Flashcard>(response);
+  }
+
+  async deleteFlashcard(cardId: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/api/flashcards/${cardId}`, {
+      method: "DELETE",
+      headers: this.headers(),
+    });
+    await this.envelope<{ id: string }>(response);
   }
 
   async *chat(
