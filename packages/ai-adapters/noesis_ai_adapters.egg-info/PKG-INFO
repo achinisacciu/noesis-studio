@@ -1,7 +1,0 @@
-Metadata-Version: 2.4
-Name: noesis-ai-adapters
-Version: 0.1.0
-Summary: Adapter comuni per runtime AI locali
-Requires-Python: >=3.11
-Requires-Dist: httpx>=0.27
-Requires-Dist: noesis-contracts
