@@ -85,3 +85,34 @@ class SearchHit(BaseModel):
 class SearchResponse(BaseModel):
     query: str
     hits: list[SearchHit]
+
+
+class Citation(BaseModel):
+    document_id: str
+    page: int | None = None
+    section: str | None = None
+    snippet: str
+
+
+class TutorRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
+    document_id: str | None = None
+    limit: int = Field(default=5, ge=1, le=20)
+
+
+class TokenEvent(BaseModel):
+    delta: str
+
+
+class CitationEvent(BaseModel):
+    citation: Citation
+
+
+class DoneEvent(BaseModel):
+    model: str | None = None
+    citations: int = 0
+
+
+class ErrorEvent(BaseModel):
+    code: ErrorCode
+    message: str

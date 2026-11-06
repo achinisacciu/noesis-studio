@@ -1,4 +1,5 @@
 import os
+from collections.abc import AsyncIterator
 
 import httpx
 from fastapi import HTTPException
@@ -46,6 +47,28 @@ async def forward_file(
     except httpx.HTTPError:
         raise HTTPException(status_code=502, detail="document service non disponibile") from None
     return JSONResponse(status_code=response.status_code, content=response.json())
+
+
+async def stream(base_url: str, path: str, payload: dict[str, object]) -> AsyncIterator[bytes]:
+    timeout = httpx.Timeout(connect=5.0, read=300.0, write=30.0, pool=5.0)
+    try:
+        async with (
+            httpx.AsyncClient(timeout=timeout) as client,
+            client.stream(
+                "POST", f"{base_url}{path}", json=payload, headers=_headers()
+            ) as response,
+        ):
+            if response.status_code != 200:
+                yield error_frame("DEPENDENCY_ERROR", "AI service non disponibile")
+                return
+            async for chunk in response.aiter_raw():
+                yield chunk
+    except httpx.HTTPError:
+        yield error_frame("DEPENDENCY_ERROR", "AI service non raggiungibile")
+
+
+def error_frame(code: str, message: str) -> bytes:
+    return f'event: error\ndata: {{"code": "{code}", "message": "{message}"}}\n\n'.encode()
 
 
 async def check(base_url: str, name: str) -> tuple[str, str]:

@@ -18,7 +18,7 @@ import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SERVICES = ("document", "rag", "gateway")
+SERVICES = ("document", "rag", "ai", "gateway")
 
 
 def free_port() -> int:
@@ -82,6 +82,35 @@ def wait_ready(url: str, timeout: float = 60) -> None:
     raise SystemExit(f"servizio non pronto: {url}")
 
 
+def chat(
+    gateway: str, token: str, question: str, document_id: str
+) -> list[tuple[str, dict[str, object]]]:
+    payload = {"question": question, "document_id": document_id, "limit": 3}
+    req = urllib.request.Request(
+        f"{gateway}/api/ai/chat",
+        data=json.dumps(payload).encode(),
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "Accept": "text/event-stream",
+        },
+    )
+    events: list[tuple[str, dict[str, object]]] = []
+    event = ""
+    try:
+        with urllib.request.urlopen(req, timeout=180) as response:
+            for raw in response:
+                line = raw.decode().rstrip("\r\n")
+                if line.startswith("event: "):
+                    event = line[7:]
+                elif line.startswith("data: ") and event:
+                    events.append((event, json.loads(line[6:])))
+    except urllib.error.HTTPError as error:
+        raise SystemExit(f"chat fallita: {error.code} {error.read().decode(errors='replace')}")
+    return events
+
+
 def check_flow(gateway: str, token: str) -> None:
     markdown = "# Varianza\n\nLa varianza misura la dispersione dei dati.\n"
 
@@ -118,6 +147,14 @@ def check_flow(gateway: str, token: str) -> None:
 
     status, body = request("POST", f"{gateway}/api/index/rebuild", token)
     assert status == 200 and body["data"] == {"documents": 1, "chunks": 1}, body
+
+    events = chat(gateway, token, "Che cosa misura la varianza?", document_id)
+    names = [name for name, _ in events]
+    assert "citation" in names and "done" in names, events
+    assert "error" not in names, events
+    answer = "".join(str(data["delta"]) for name, data in events if name == "token")
+    assert answer.strip(), events
+    print(f"gateway   ok     tutor SSE ({len(answer)} caratteri, {names.count('citation')} citazioni)")
 
     status, body = request("DELETE", f"{gateway}/api/documents/{document_id}", token)
     assert status == 200, body
@@ -175,8 +212,10 @@ def main() -> int:
         **os.environ,
         "NOESIS_TOKEN": token,
         "NOESIS_DATA": str(data_dir),
+        "NOESIS_MODEL": os.getenv("NOESIS_MODEL", "qwen3.5:0.8b"),
         "DOCUMENT_URL": urls["document"],
         "RAG_URL": urls["rag"],
+        "AI_URL": urls["ai"],
         "PYTHONUNBUFFERED": "1",
     }
     processes: dict[str, subprocess.Popen[bytes]] = {}

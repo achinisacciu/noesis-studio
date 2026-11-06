@@ -1,4 +1,5 @@
 import os
+from collections.abc import AsyncIterator
 
 import pytest
 from fastapi.responses import JSONResponse
@@ -106,6 +107,47 @@ def test_rag_search_forwards(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert response.status_code == 200
     assert calls == [("POST", routes.RAG_URL, "/search")]
+
+
+def test_ai_chat_streams_raw_events(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[tuple[str, str, dict[str, object]]] = []
+
+    async def fake_stream(
+        base_url: str, path: str, payload: dict[str, object]
+    ) -> AsyncIterator[bytes]:
+        calls.append((base_url, path, payload))
+        yield b'event: token\ndata: {"delta": "La varianza"}\n\n'
+        yield b'event: done\ndata: {"model": null, "citations": 0}\n\n'
+
+    monkeypatch.setattr(routes, "stream", fake_stream)
+    response = client.post("/api/ai/chat", json={"question": "cos'è la varianza?"})
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert "La varianza" in response.text
+    assert calls == [
+        (
+            routes.AI_URL,
+            "/chat",
+            {"question": "cos'è la varianza?", "document_id": None, "limit": 5},
+        )
+    ]
+
+
+def test_ai_models_forwards(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[tuple[str, str]] = []
+
+    async def fake_forward(
+        method: str, base_url: str, path: str, payload: dict[str, object] | None = None
+    ) -> JSONResponse:
+        calls.append((method, path))
+        return JSONResponse(status_code=200, content={"status": "success", "data": []})
+
+    monkeypatch.setattr(routes, "forward", fake_forward)
+    response = client.get("/api/ai/models")
+
+    assert response.status_code == 200
+    assert calls == [("GET", "/models")]
 
 
 def test_api_requires_token() -> None:

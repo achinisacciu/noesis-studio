@@ -5,14 +5,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi import Path as PathParam
-from fastapi.responses import JSONResponse
-from noesis_contracts import ApiResponse, HealthStatus, SearchRequest
+from fastapi.responses import JSONResponse, StreamingResponse
+from noesis_contracts import ApiResponse, HealthStatus, SearchRequest, TutorRequest
 
 from app.core.security import require_token
-from app.proxy import check, forward, forward_file
+from app.proxy import check, forward, forward_file, stream
 
 DOCUMENT_URL = os.getenv("DOCUMENT_URL", "http://127.0.0.1:8002")
 RAG_URL = os.getenv("RAG_URL", "http://127.0.0.1:8003")
+AI_URL = os.getenv("AI_URL", "http://127.0.0.1:8004")
 
 router = APIRouter()
 api = APIRouter(dependencies=[Depends(require_token)])
@@ -88,3 +89,17 @@ async def index_document(
 @api.post("/api/rag/search")
 async def rag_search(payload: SearchRequest) -> JSONResponse:
     return await forward("POST", RAG_URL, "/search", payload.model_dump(mode="json"))
+
+
+@api.get("/api/ai/models")
+async def ai_models() -> JSONResponse:
+    return await forward("GET", AI_URL, "/models")
+
+
+@api.post("/api/ai/chat")
+async def ai_chat(payload: TutorRequest) -> StreamingResponse:
+    return StreamingResponse(
+        stream(AI_URL, "/chat", payload.model_dump(mode="json")),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
