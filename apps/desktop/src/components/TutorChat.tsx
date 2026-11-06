@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ApiClient, ApiRequestError } from "../api";
 import type { Citation } from "../types";
+import { MessageText } from "./MessageText";
 
 interface Props {
   client: ApiClient;
@@ -105,7 +106,7 @@ export function TutorChat({ client, documentId, onCitationClick }: Props) {
             <div className="message-role">
               {message.role === "user" ? "Tu" : "Noesis"}
             </div>
-            {message.text && <p className="message-text">{message.text}</p>}
+            {message.text && <MessageText text={message.text} />}
             {streaming && index === messages.length - 1 && !message.text && (
               <p className="muted">Sto cercando nelle fonti…</p>
             )}

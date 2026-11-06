@@ -328,6 +328,18 @@ button:disabled {
   white-space: pre-wrap;
 }
 
+.message-text strong {
+  color: #ffffff;
+}
+
+.message-text code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: #0c0f16;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 0.92em;
+}
+
 .citations {
   display: flex;
   flex-wrap: wrap;

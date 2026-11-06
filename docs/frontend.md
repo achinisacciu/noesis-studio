@@ -36,7 +36,7 @@ Default del client: `http://127.0.0.1:8010`, token `dev-token`. Sovrascrivibili 
 
 ## Verifica
 
-- 9 test Vitest (parser SSE, client API, corrispondenza citazione → chunk).
+- 13 test Vitest (parser SSE, client API, corrispondenza citazione → chunk, formattazione del testo).
 - `tsc --noEmit` e `vite build` puliti.
 - Flusso verificato nel browser: import di `statistica.md` → 3 chunk → indice → domanda → risposta in streaming con citazioni `[1]`-`[3]` → clic su `[2]` → lettore aperto con la sezione "Varianza" evidenziata.
 - CORS del gateway limitato a `http://localhost:5173` e `http://127.0.0.1:5173` (configurabile con `NOESIS_FRONTEND_ORIGIN`).
@@ -48,6 +48,6 @@ Default del client: `http://127.0.0.1:8010`, token `dev-token`. Sovrascrivibili 
 - Le citazioni con sola pagina (PDF) evidenziano il primo chunk di quella pagina.
 - Token e URL non sono configurabili da UI.
 - Una sola conversazione, non persistita.
-- Il testo del modello è mostrato così com'è: il Markdown (`**grassetto**`) non viene interpretato.
+- Il testo del modello è reso in modo minimale: grassetto, codice inline ed elenchi; niente tabelle, link o titoli.
 - Nessun test E2E Playwright né test di accessibilità.
 - Il modello locale può citare fonti parziali o dichiarare "nessuna fonte" in modo impreciso: serve il set di valutazione RAG.

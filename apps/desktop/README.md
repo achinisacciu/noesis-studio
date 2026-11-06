@@ -36,6 +36,7 @@ corepack pnpm build       # build di produzione in dist/
 - Import che indicizza subito il documento; pulsante per ricostruire l'indice.
 - Chat in streaming SSE con stop, citazioni cliccabili e selezione del documento.
 - Lettore del documento che si apre sulla citazione ed evidenzia il punto citato.
+- Testo del tutor con grassetto, codice ed elenchi resi leggibili.
 - Tema scuro e layout responsive.
 
 ## Cosa manca
