@@ -62,6 +62,7 @@ async def events(payload: TutorRequest, request_id: str) -> AsyncIterator[str]:
     request = ChatRequest(
         model=MODEL,
         messages=build_messages(payload.question, hits),
+        temperature=0.2,
         request_id=request_id,
     )
     try:

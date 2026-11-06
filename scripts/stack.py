@@ -175,6 +175,11 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="esegue il flusso completo ed esce")
     parser.add_argument("--no-sync", action="store_true", help="salta uv sync")
     parser.add_argument(
+        "--dev",
+        action="store_true",
+        help="porte fisse 8010-8014 e token dev-token per il frontend Vite",
+    )
+    parser.add_argument(
         "--data",
         type=Path,
         help="cartella dati condivisa (default: data/; con --check viene isolata e pulita)",
@@ -203,8 +208,11 @@ def main() -> int:
                 check=True,
             )
 
-    token = secrets.token_urlsafe(24)
-    ports = {service: free_port() for service in SERVICES}
+    token = "dev-token" if args.dev else secrets.token_urlsafe(24)
+    if args.dev:
+        ports = {"document": 8012, "rag": 8013, "ai": 8014, "gateway": 8010}
+    else:
+        ports = {service: free_port() for service in SERVICES}
     urls = {service: f"http://127.0.0.1:{ports[service]}" for service in SERVICES}
     logs.mkdir(parents=True, exist_ok=True)
 
@@ -248,6 +256,9 @@ def main() -> int:
             check_flow(urls["gateway"], token)
             return 0
 
+        if args.dev:
+            print(f"gateway   dev    {urls['gateway']}  token {token}")
+            print("frontend: cd apps/desktop && corepack pnpm dev")
         print("Ctrl+C per arrestare i servizi.")
         while True:
             time.sleep(1)

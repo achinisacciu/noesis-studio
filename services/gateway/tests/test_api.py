@@ -168,5 +168,17 @@ def test_ready_reports_degraded(monkeypatch: pytest.MonkeyPatch) -> None:
     assert response.json()["data"] == {"document": "healthy", "rag": "unavailable"}
 
 
+def test_cors_allows_frontend_origin() -> None:
+    response = client.options(
+        "/api/documents",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+
+
 def test_health() -> None:
     assert client.get("/health").json()["data"]["status"] == "healthy"

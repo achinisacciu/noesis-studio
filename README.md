@@ -2,7 +2,7 @@
 
 Piattaforma desktop **local-first** per studiare Statistica, Matematica, ML e Deep Learning: lettore di documenti, tutor IA con RAG citazionale, notebook Python in sandbox, flashcard e quiz.
 
-**Stato:** POC-01, POC-04 e POC-02/03 completati (microservizi locali, persistenza SQLite + ChromaDB con citazioni, tutor locale in streaming SSE). Nessuna funzionalità MVP ancora implementata.
+**Stato:** POC-01, POC-04 e POC-02/03 completati; primo client desktop in React con import, indice, tutor in streaming e citazioni. Wrapper Tauri e funzionalità MVP ancora da fare.
 
 ## Documenti
 
@@ -16,6 +16,7 @@ Piattaforma desktop **local-first** per studiare Statistica, Matematica, ML e De
 | [docs/poc-01.md](docs/poc-01.md) | POC-01: microservizi locali, esito e limiti |
 | [docs/poc-04.md](docs/poc-04.md) | POC-04: SQLite + ChromaDB, RAG con citazioni |
 | [docs/poc-02.md](docs/poc-02.md) | POC-02/03: adapter AI, Ollama, streaming SSE |
+| [docs/frontend.md](docs/frontend.md) | Client React: import, chat, citazioni |
 | [AGENTS.md](AGENTS.md) | Regole operative per gli agenti di sviluppo |
 
 ## Stack
@@ -28,6 +29,7 @@ Tauri 2 + React/TypeScript per il desktop, microservizi Python/FastAPI in locale
 - `services/` — `document`, `rag`, `ai`, `gateway`: processi Python indipendenti.
 - `packages/contracts` — modelli Pydantic condivisi.
 - `packages/ai-adapters` — contratto adapter e implementazione Ollama.
+- `apps/desktop` — client React/TypeScript (Vite), in attesa del wrapper Tauri.
 - `scripts/` — supervisore del POC e aggiornamento della skill ponytail.
 - `apps/desktop` — non ancora creata (Tauri 2 + React).
 
@@ -39,9 +41,18 @@ Prerequisiti: Python 3.11+, `uv`, Ollama con un modello installato (default `qwe
 
 ```bash
 ollama pull qwen3.5:0.8b          # una volta sola
-python scripts/stack.py --check   # avvia i servizi, verifica il flusso completo, arresta
-python scripts/stack.py           # avvia e resta attivo fino a Ctrl+C
+python scripts/stack.py --dev     # backend su porte fisse, token dev-token
 ```
+
+In un secondo terminale:
+
+```bash
+cd apps/desktop
+corepack pnpm install
+corepack pnpm dev                 # http://localhost:5173
+```
+
+`python scripts/stack.py --check` verifica invece l'intero flusso e termina senza aprire l'interfaccia.
 
 Il tutor si interroga via gateway:
 
@@ -60,7 +71,15 @@ uv run ruff check . && uv run ruff format --check .
 uv run mypy app
 ```
 
-Dettagli e limiti in [docs/poc-04.md](docs/poc-04.md) e [docs/poc-02.md](docs/poc-02.md); il primo prototipo è in [docs/poc-01.md](docs/poc-01.md).
+Test del frontend:
+
+```bash
+cd apps/desktop
+corepack pnpm test
+corepack pnpm typecheck
+```
+
+Dettagli e limiti in [docs/poc-04.md](docs/poc-04.md), [docs/poc-02.md](docs/poc-02.md) e [docs/frontend.md](docs/frontend.md); il primo prototipo è in [docs/poc-01.md](docs/poc-01.md).
 
 Aggiornamento della skill ponytail:
 

@@ -1,10 +1,12 @@
 import json
 import logging
+import os
 import time
 import uuid
 from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import api, router
 from app.core.errors import install_error_handlers
@@ -18,6 +20,16 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 def create_app() -> FastAPI:
     app = FastAPI(title=SERVICE, version="0.1.0")
+    origins = os.getenv(
+        "NOESIS_FRONTEND_ORIGIN",
+        "http://localhost:5173,http://127.0.0.1:5173",
+    ).split(",")
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[origin.strip() for origin in origins],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     install_error_handlers(app)
     app.include_router(router)
     app.include_router(api)
