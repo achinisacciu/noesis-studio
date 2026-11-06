@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Avvia Document, RAG e Gateway come processi locali e verifica il flusso completo.
+"""Avvia Document, RAG, AI, Learning e Gateway come processi locali e verifica il flusso completo.
 
 Flusso `--check`: import file -> indice -> ricerca con citazione -> rebuild -> delete.
 """
@@ -18,7 +18,7 @@ import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SERVICES = ("document", "rag", "ai", "gateway")
+SERVICES = ("document", "rag", "ai", "learning", "gateway")
 
 
 def free_port() -> int:
@@ -156,8 +156,39 @@ def check_flow(gateway: str, token: str) -> None:
     assert answer.strip(), events
     print(f"gateway   ok     tutor SSE ({len(answer)} caratteri, {names.count('citation')} citazioni)")
 
+    status, body = request(
+        "POST",
+        f"{gateway}/api/flashcards",
+        token,
+        {
+            "document_id": document_id,
+            "front": "Che cosa misura la varianza?",
+            "back": "La dispersione dei valori rispetto alla media.",
+            "section": "Varianza",
+        },
+    )
+    assert status == 200, body
+    card = body["data"]
+    assert isinstance(card, dict)
+    card_id = card["id"]
+    assert isinstance(card_id, str)
+
+    status, body = request("GET", f"{gateway}/api/flashcards?document_id={document_id}", token)
+    assert status == 200 and len(body["data"]["cards"]) == 1, body
+    status, body = request(
+        "PATCH",
+        f"{gateway}/api/flashcards/{card_id}",
+        token,
+        {"front": "Che cosa misura la varianza?"},
+    )
+    assert status == 200 and body["data"]["front"] == "Che cosa misura la varianza?", body
+    print("gateway   ok     flashcard create + list + update")
+
     status, body = request("DELETE", f"{gateway}/api/documents/{document_id}", token)
     assert status == 200, body
+    status, body = request("GET", f"{gateway}/api/flashcards?document_id={document_id}", token)
+    assert status == 200 and body["data"]["cards"] == [], body
+    print("gateway   ok     schede rimosse con il documento")
 
     status, body = request("GET", f"{gateway}/api/documents/{document_id}", token)
     assert status == 404, body
@@ -210,7 +241,7 @@ def main() -> int:
 
     token = "dev-token" if args.dev else secrets.token_urlsafe(24)
     if args.dev:
-        ports = {"document": 8012, "rag": 8013, "ai": 8014, "gateway": 8010}
+        ports = {"document": 8012, "rag": 8013, "ai": 8014, "learning": 8011, "gateway": 8010}
     else:
         ports = {service: free_port() for service in SERVICES}
     urls = {service: f"http://127.0.0.1:{ports[service]}" for service in SERVICES}
@@ -224,6 +255,7 @@ def main() -> int:
         "DOCUMENT_URL": urls["document"],
         "RAG_URL": urls["rag"],
         "AI_URL": urls["ai"],
+        "LEARNING_URL": urls["learning"],
         "PYTHONUNBUFFERED": "1",
     }
     processes: dict[str, subprocess.Popen[bytes]] = {}

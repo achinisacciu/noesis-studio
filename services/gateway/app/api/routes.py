@@ -3,10 +3,17 @@ import os
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi import Path as PathParam
 from fastapi.responses import JSONResponse, StreamingResponse
-from noesis_contracts import ApiResponse, HealthStatus, SearchRequest, TutorRequest
+from noesis_contracts import (
+    ApiResponse,
+    FlashcardCreate,
+    FlashcardUpdate,
+    HealthStatus,
+    SearchRequest,
+    TutorRequest,
+)
 
 from app.core.security import require_token
 from app.proxy import check, forward, forward_file, stream
@@ -14,6 +21,7 @@ from app.proxy import check, forward, forward_file, stream
 DOCUMENT_URL = os.getenv("DOCUMENT_URL", "http://127.0.0.1:8002")
 RAG_URL = os.getenv("RAG_URL", "http://127.0.0.1:8003")
 AI_URL = os.getenv("AI_URL", "http://127.0.0.1:8004")
+LEARNING_URL = os.getenv("LEARNING_URL", "http://127.0.0.1:8005")
 
 router = APIRouter()
 api = APIRouter(dependencies=[Depends(require_token)])
@@ -74,10 +82,13 @@ async def get_document_chunks(
 async def delete_document(
     document_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
 ) -> JSONResponse:
-    # l'indice è derivato: va ripulito prima, altrimenti restano citazioni orfane
+    # indice e schede sono derivati: vanno ripuliti prima, altrimenti restano riferimenti orfani
     indexed = await forward("DELETE", RAG_URL, f"/index/{document_id}")
     if indexed.status_code >= 500:
         raise HTTPException(status_code=502, detail="indice non ripulito, documento non eliminato")
+    cards = await forward("DELETE", LEARNING_URL, f"/flashcards?document_id={document_id}")
+    if cards.status_code >= 500:
+        raise HTTPException(status_code=502, detail="schede non ripulite, documento non eliminato")
     return await forward("DELETE", DOCUMENT_URL, f"/documents/{document_id}")
 
 
@@ -96,6 +107,43 @@ async def index_document(
 @api.post("/api/rag/search")
 async def rag_search(payload: SearchRequest) -> JSONResponse:
     return await forward("POST", RAG_URL, "/search", payload.model_dump(mode="json"))
+
+
+@api.get("/api/flashcards")
+async def list_flashcards(
+    document_id: str | None = Query(default=None, pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+) -> JSONResponse:
+    path = "/flashcards"
+    if document_id:
+        path += f"?document_id={document_id}"
+    return await forward("GET", LEARNING_URL, path)
+
+
+@api.post("/api/flashcards")
+async def create_flashcard(payload: FlashcardCreate) -> JSONResponse:
+    return await forward(
+        "POST", LEARNING_URL, "/flashcards", payload.model_dump(mode="json", exclude_none=True)
+    )
+
+
+@api.patch("/api/flashcards/{card_id}")
+async def update_flashcard(
+    payload: FlashcardUpdate,
+    card_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+) -> JSONResponse:
+    return await forward(
+        "PATCH",
+        LEARNING_URL,
+        f"/flashcards/{card_id}",
+        payload.model_dump(mode="json", exclude_none=True),
+    )
+
+
+@api.delete("/api/flashcards/{card_id}")
+async def delete_flashcard(
+    card_id: str = PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$"),
+) -> JSONResponse:
+    return await forward("DELETE", LEARNING_URL, f"/flashcards/{card_id}")
 
 
 @api.get("/api/ai/models")

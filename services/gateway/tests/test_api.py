@@ -54,6 +54,7 @@ def test_delete_cleans_index_before_document(monkeypatch: pytest.MonkeyPatch) ->
     assert response.status_code == 200
     assert calls == [
         ("DELETE", routes.RAG_URL, "/index/d1"),
+        ("DELETE", routes.LEARNING_URL, "/flashcards?document_id=d1"),
         ("DELETE", routes.DOCUMENT_URL, "/documents/d1"),
     ]
 
@@ -167,6 +168,50 @@ def test_chunks_forward_to_document(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert response.status_code == 200
     assert calls == [("GET", routes.DOCUMENT_URL, "/documents/d1/chunks")]
+
+
+def test_delete_aborts_when_cards_cleanup_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[str] = []
+
+    async def fake_forward(
+        method: str, base_url: str, path: str, payload: dict[str, object] | None = None
+    ) -> JSONResponse:
+        calls.append(path)
+        status = 502 if path.startswith("/flashcards") else 200
+        return JSONResponse(status_code=status, content={"status": "success", "data": {}})
+
+    monkeypatch.setattr(routes, "forward", fake_forward)
+    response = client.delete("/api/documents/d1")
+
+    assert response.status_code == 502
+    assert calls == ["/index/d1", "/flashcards?document_id=d1"]
+
+
+def test_flashcards_forward_to_learning(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[tuple[str, str, dict[str, object] | None]] = []
+
+    async def fake_forward(
+        method: str, base_url: str, path: str, payload: dict[str, object] | None = None
+    ) -> JSONResponse:
+        calls.append((method, path, payload))
+        return JSONResponse(status_code=200, content={"status": "success", "data": {}})
+
+    monkeypatch.setattr(routes, "forward", fake_forward)
+
+    client.get("/api/flashcards", params={"document_id": "d1"})
+    client.post(
+        "/api/flashcards",
+        json={"document_id": "d1", "front": "domanda", "back": "risposta"},
+    )
+    client.patch("/api/flashcards/c1", json={"front": "nuova"})
+    client.delete("/api/flashcards/c1")
+
+    assert calls == [
+        ("GET", "/flashcards?document_id=d1", None),
+        ("POST", "/flashcards", {"document_id": "d1", "front": "domanda", "back": "risposta"}),
+        ("PATCH", "/flashcards/c1", {"front": "nuova"}),
+        ("DELETE", "/flashcards/c1", None),
+    ]
 
 
 def test_api_requires_token() -> None:

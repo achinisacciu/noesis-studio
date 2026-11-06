@@ -116,3 +116,30 @@ class DoneEvent(BaseModel):
 class ErrorEvent(BaseModel):
     code: ErrorCode
     message: str
+
+
+class Flashcard(BaseModel):
+    id: str
+    document_id: str
+    front: str
+    back: str
+    page: int | None = None
+    section: str | None = None
+    created_at: datetime
+
+
+class FlashcardCreate(BaseModel):
+    document_id: str = Field(min_length=1, max_length=64)
+    front: str = Field(min_length=1, max_length=2000)
+    back: str = Field(min_length=1, max_length=8000)
+    page: int | None = Field(default=None, ge=1)
+    section: str | None = Field(default=None, max_length=200)
+
+
+class FlashcardUpdate(BaseModel):
+    front: str | None = Field(default=None, min_length=1, max_length=2000)
+    back: str | None = Field(default=None, min_length=1, max_length=8000)
+
+
+class FlashcardList(BaseModel):
+    cards: list[Flashcard]

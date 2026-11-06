@@ -20,7 +20,7 @@ POST   /api/documents          -> gateway -> document (parse + chunk + SQLite)
 POST   /api/index/{id}         -> gateway -> rag -> document (chunk) -> Chroma
 POST   /api/rag/search         -> gateway -> rag (hit con documento, pagina, sezione)
 POST   /api/index/rebuild      -> gateway -> rag -> document (tutti i documenti)
-DELETE /api/documents/{id}     -> gateway -> rag (indice) -> document (SQLite + file)
+DELETE /api/documents/{id}     -> gateway -> rag (indice) -> learning (schede) -> document (SQLite + file)
 ```
 
 ## Persistenza
@@ -50,7 +50,7 @@ DELETE /api/documents/{id}     -> gateway -> rag (indice) -> document (SQLite + 
 | rag | `POST /index`, `DELETE /index/{id}`, `POST /index/rebuild`, `POST /search` | sì |
 | gateway | `POST /api/documents`, `GET /api/documents`, `GET /api/documents/{id}`, `GET /api/documents/{id}/chunks`, `DELETE /api/documents/{id}`, `POST /api/index/{id}`, `POST /api/index/rebuild`, `POST /api/rag/search` | sì |
 
-Il delete passa prima dal RAG: se l'indice non viene ripulito, il documento non viene eliminato e non restano citazioni orfane.
+Il delete passa prima dal RAG e dal Learning Service: se l'indice o le schede non vengono ripuliti, il documento non viene eliminato e non restano citazioni orfane.
 
 ## Esecuzione
 

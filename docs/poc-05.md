@@ -8,7 +8,7 @@
 | Componente | Cartella | Ruolo |
 | --- | --- | --- |
 | Shell Tauri 2 | `apps/desktop/src-tauri` | Finestra nativa, CSP, icona, ciclo di vita |
-| Supervisore servizi | `scripts/stack.py --dev` | Avvia document, rag, ai e gateway su porte fisse con `dev-token` |
+| Supervisore servizi | `scripts/stack.py --dev` | Avvia document, rag, ai, learning e gateway su porte fisse con `dev-token` |
 | Frontend | `apps/desktop/src` | Stessa UI React, invariata: parla solo con il gateway |
 
 ## Ciclo di vita
@@ -44,11 +44,11 @@ corepack pnpm tauri:build
 ## Cosa è stato verificato
 
 - `cargo build` del crate `noesis-desktop` con toolchain `stable-x86_64-pc-windows-gnu`.
-- Avvio con `corepack pnpm tauri:dev` a gateway spento: la finestra si apre, la shell avvia `scripts/stack.py --dev --no-sync` e i quattro servizi rispondono su 8010/8012/8013/8014.
+- Avvio con `corepack pnpm tauri:dev` a gateway spento: la finestra si apre, la shell avvia `scripts/stack.py --dev --no-sync` e i cinque servizi rispondono su 8010/8011/8012/8013/8014.
 - La UI dentro la finestra carica la libreria dal gateway (documento `statistica`, 3 chunk) e mostra il pannello tutor.
 - Chiusura con `WM_CLOSE`: l'albero di processi Python viene terminato, porte 8010-8014 libere, nessun processo `python`, `node` o `noesis-desktop` residuo.
 - Avvio con gateway già attivo: la shell non avvia un secondo stack e, alla chiusura della finestra, lascia attivo quello esterno.
-- `python scripts/stack.py --check --no-sync` completo: import, indice, ricerca con citazione, rebuild, delete e tutor SSE.
+- `python scripts/stack.py --check --no-sync` completo: import, indice, ricerca con citazione, rebuild, tutor SSE, creazione/lettura/modifica delle flashcard e delete cascade.
 - Test CORS del gateway per l'origine `http://tauri.localhost` del webview di produzione.
 
 Durante la prima compilazione il linker mingw ha rifiutato la `cdylib` (`export ordinal too large: 91023`). Il crate desktop ora dichiara solo `crate-type = ["rlib"]`, che è quanto serve al binario; `staticlib` e `cdylib` restano utili solo ai target mobili.

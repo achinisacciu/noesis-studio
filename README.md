@@ -2,7 +2,7 @@
 
 Piattaforma desktop **local-first** per studiare Statistica, Matematica, ML e Deep Learning: lettore di documenti, tutor IA con RAG citazionale, notebook Python in sandbox, flashcard e quiz.
 
-**Stato:** POC-01, POC-04, POC-02/03 e POC-05 completati; app desktop Tauri 2 con import, indice, tutor in streaming, citazioni e lettore. Funzionalità MVP ancora da fare.
+**Stato:** POC-01, POC-04, POC-02/03 e POC-05 completati; app desktop Tauri 2 con import, indice, tutor in streaming, citazioni, lettore e flashcard create dal testo. Funzionalità MVP ancora da fare.
 
 ## Documenti
 
@@ -27,7 +27,7 @@ Tauri 2 + React/TypeScript per il desktop, microservizi Python/FastAPI in locale
 ## Struttura
 
 - `docs/` — documenti di progetto.
-- `services/` — `document`, `rag`, `ai`, `gateway`: processi Python indipendenti.
+- `services/` — `document`, `rag`, `ai`, `learning`, `gateway`: processi Python indipendenti.
 - `packages/contracts` — modelli Pydantic condivisi.
 - `packages/ai-adapters` — contratto adapter e implementazione Ollama.
 - `apps/desktop` — app desktop Tauri 2 + React/TypeScript.
