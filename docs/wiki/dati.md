@@ -39,12 +39,26 @@ CREATE TABLE IF NOT EXISTS chunks (
     section TEXT         -- NULL se non c'è un titolo
 );
 CREATE INDEX IF NOT EXISTS idx_chunks_document ON chunks(document_id);
+
+CREATE TABLE IF NOT EXISTS annotations (
+    id TEXT PRIMARY KEY,
+    document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    chunk_id TEXT NOT NULL REFERENCES chunks(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL,          -- highlight | note | bookmark
+    start INTEGER NOT NULL DEFAULT 0,
+    end INTEGER NOT NULL DEFAULT 0,
+    note TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_annotations_document ON annotations(document_id);
 ```
 
 - `PRAGMA journal_mode=WAL`, `PRAGMA foreign_keys=ON`.
 - `id` documento: `uuid4().hex`; `id` chunk: `"<document_id>:<position>"`.
 - `documents.title` è lo stem del filename; `created_at` è ISO 8601 UTC.
 - Il delete del documento cancella i chunk per cascade e poi la cartella `data/files/<id>/`.
+- `annotations` è posseduta dal Document Service: `highlight`/`note` coprono `[start, end)` del testo del chunk, `bookmark` ha intervallo vuoto. Gli offset sono in unità UTF-16 per coincidere con la selezione del browser.
+- Document elimina chunk e annotazioni per cascade: il gateway non deve ripulirle.
 
 ## Schema Learning (`data/sqlite/learning.db`)
 
@@ -95,7 +109,9 @@ Ordine nel gateway (`services/gateway/app/api/routes.py`):
 1. `DELETE rag /index/{id}` — via i vettori.
 2. `DELETE learning /flashcards?document_id=` — via le schede.
 3. `DELETE learning /reading-positions/{id}` — via la posizione.
-4. `DELETE document /documents/{id}` — via righe, chunk e file.
+4. `DELETE document /documents/{id}` — via righe, chunk, annotazioni e file.
+
+Le annotazioni non compaiono nell'ordine del gateway: appartengono al Document Service e spariscono per cascade con il documento.
 
 Se uno dei primi tre passi risponde 5xx, il gateway restituisce 502 e **non** elimina il documento: meglio un orfano ricostruibile che una citazione senza fonte. I test del gateway bloccano questo contratto.
 

@@ -6,11 +6,12 @@ Tabella di raccordo tra ciò che l'utente vede e il codice che lo realizza. Le s
 
 | Funzionalità | Storia | Backend | Frontend | Test / verifica |
 | --- | --- | --- | --- | --- |
-| Import PDF/DOCX/MD/TXT con chunk e citazioni | A1 | `services/document/app/api/routes.py`, `parsing.py`, `store.py` | `DocumentPanel.tsx` | 8 test Document; `docs/poc-04.md` |
+| Import PDF/DOCX/MD/TXT con chunk e citazioni | A1 | `services/document/app/api/routes.py`, `parsing.py`, `store.py` | `DocumentPanel.tsx` | 11 test Document; `docs/poc-04.md` |
 | Indicizzazione e rebuild | A2 (parziale) | `services/rag/app/index.py`, `api/routes.py`; `gateway` `/api/index/*` | `DocumentPanel.tsx` (Importa, Ricostruisci) | 7 test RAG; `--check` |
 | Tutor in streaming con citazioni | B2, B5 | `services/ai/app/api/routes.py`, `prompt.py`, `sse.py`; gateway `/api/ai/chat` | `TutorChat.tsx`, `sse.ts`, `markdown.ts`, `MessageText.tsx` | 8 test AI; `api.test.ts`, `sse.test.ts`, `markdown.test.ts`; `--check` |
 | Citazione cliccabile → lettore sul passaggio | B2 | hit con `page`/`section` da RAG | `reader.ts`, `DocumentReader.tsx`, `App.tsx` | `reader.test.ts`; verifica manuale |
 | Ripresa della lettura | A4 | `services/learning/app/api/routes.py`, `store.py`; gateway `/api/reading-positions/*` | `DocumentReader.tsx`, `DocumentPanel.tsx`, `App.tsx` | 2 test Learning, 2 test gateway, `reader.test.ts`, `api.test.ts`; verifica manuale con riavvio |
+| Evidenziazioni, note e segnalibri | A3 | `services/document/app/api/routes.py`, `store.py`; gateway `/api/documents/{id}/annotations`, `/api/annotations/{id}` | `DocumentReader.tsx`, `annotations.ts` | 3 test Document, 1 test gateway, `annotations.test.ts`; `--check` |
 | Flashcard manuali con fonte | F1 (manuale) | `services/learning/app/api/routes.py`, `store.py`; gateway `/api/flashcards*` | `DocumentReader.tsx` (crea), `FlashcardsPanel.tsx` | 6 test Learning, 3 test gateway, `api.test.ts`; verifica manuale |
 | Eliminazione documento con pulizia derivati | A1, A2 | gateway `delete_document` + test ordine/abort | `DocumentPanel.tsx` | 3 test gateway; `--check` |
 | Valutazione delle citazioni RAG | gate MVP | `scripts/eval_rag.py`, `evaluation/` | — | 48 domande, 46 corrette (95,8%), soglia 90% |
@@ -33,6 +34,14 @@ Punti di modifica tipici: un nuovo formato richiede `PARSERS` in `parsing.py`; u
 4. Lo scroll salva `PUT /api/reading-positions/{id}` con throttle.
 5. Una citazione passa pagina/sezione: la posizione salvata viene ignorata.
 
+### Traccia: annotazioni
+
+1. La selezione dentro un chunk diventa `{ chunk_id, start, end }` con `rangeOffsets`.
+2. `POST /api/documents/{id}/annotations` salva evidenziazione o nota; la stella salva un `bookmark`.
+3. Il reader ricarica `GET .../annotations` e rende i tratti con `segmentsFor`.
+4. L'elenco "Annotazioni" filtra nota e testo del chunk, scorre al passaggio e consente il delete.
+5. Il documento eliminato porta con sé le annotazioni per cascade; nessuna pulizia nel gateway.
+
 ### Traccia: creazione e ripasso scheda
 
 1. Nel reader, "Crea scheda" su un chunk precompila fronte (`Spiega: <sezione>` o "Spiega questo passaggio") e retro (testo del chunk).
@@ -44,7 +53,6 @@ Punti di modifica tipici: un nuovo formato richiede `PARSERS` in `parsing.py`; u
 
 | Funzionalità / storia | Cosa manca | Dove andrebbe |
 | --- | --- | --- |
-| Evidenziazioni, annotazioni, segnalibri (A3) | Tabella e rotte, UI di selezione | Da decidere tra Document (metadati del file) e Learning (dati utente); apri un ADR se cambia l'ownership |
 | Spazi di lavoro per materia (A6) | `workspace_id` diffuso, indici separati | Contratti, tutti gli store, routing RAG, UI |
 | Toolbar contestuale sulla selezione (B1) | Testo selezionato nella richiesta, pannello risposta | `DocumentReader`, `TutorRequest`, `TutorChat` |
 | Livelli di rigore 1-3 (C1) | Livello nel contratto e nel prompt | `TutorRequest`, `prompt.py`, toolbar UI |

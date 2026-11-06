@@ -46,6 +46,8 @@ Rotte:
 | `GET` | `/api/documents` | document |
 | `GET` | `/api/documents/{id}` | document |
 | `GET` | `/api/documents/{id}/chunks` | document |
+| `GET/POST` | `/api/documents/{id}/annotations` | document |
+| `DELETE` | `/api/annotations/{id}` | document |
 | `DELETE` | `/api/documents/{id}` | rag → learning → learning → document |
 | `POST` | `/api/index/{id}` | rag |
 | `POST` | `/api/index/rebuild` | rag |
@@ -61,7 +63,7 @@ Punti da conoscere:
 
 - `stream()` non bufferizza e propaga `Cache-Control: no-cache` e `X-Accel-Buffering: no`.
 - Il delete cascade è l'unico punto che conosce l'ordine tra servizi: se aggiungi dati derivati, aggiungi qui la pulizia prima del documento.
-- Test: `services/gateway/tests/test_api.py` (proxy, ordine delete, abort su 5xx, SSE).
+- Test: `services/gateway/tests/test_api.py` (proxy, ordine delete, abort su 5xx, SSE, annotazioni).
 
 ## Document (`services/document`)
 
@@ -69,16 +71,17 @@ Importa file, estrae testo, crea chunk, conserva gli originali.
 
 | File | Ruolo |
 | --- | --- |
-| `app/api/routes.py` | Upload, lista, dettaglio, chunk, delete; limite 50 MB |
+| `app/api/routes.py` | Upload, lista, dettaglio, chunk, annotazioni, delete; limite 50 MB |
 | `app/parsing.py` | Parser PDF/DOCX/MD/TXT e `chunk_blocks` |
-| `app/store.py` | Tabelle `documents` e `chunks`, file su disco |
+| `app/store.py` | Tabelle `documents`, `chunks`, `annotations`; file su disco |
 
 - Formati: `.pdf`, `.docx`, `.md`, `.markdown`, `.txt`.
 - PDF: PyMuPDF, `page` valorizzata; DOCX: `Heading*` → sezione; MD/TXT: titoli `#` → sezione.
 - Chunk da circa 800 caratteri; non attraversano pagina o sezione. ID chunk: `<document_id>:<position>`.
 - File originali: `data/files/<document_id>/<filename>`.
-- `DELETE` cancella riga SQLite (cascade sui chunk) e cartella file.
-- Test: 8 in `services/document/tests/test_api.py` (formati, pagina PDF, errori, delete).
+- Annotazioni: `highlight`/`note` ancorate a un intervallo del chunk, `bookmark` al chunk; offset in unità UTF-16 (come il browser). Il delete del documento le rimuove per cascade.
+- `DELETE` cancella riga SQLite (cascade su chunk e annotazioni) e cartella file.
+- Test: 11 in `services/document/tests/test_api.py` (formati, pagina PDF, errori, annotazioni, delete).
 
 ## RAG (`services/rag`)
 

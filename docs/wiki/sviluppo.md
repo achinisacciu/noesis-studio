@@ -60,6 +60,7 @@ Atteso: cinque righe `ready`, poi
 gateway   ok     tutor SSE (...)
 gateway   ok     flashcard create + list + update
 gateway   ok     posizione di lettura salvata e riletta
+gateway   ok     annotazioni create + list + delete
 gateway   ok     schede e posizione rimosse con il documento
 gateway   ok     import + indice + ricerca + rebuild + delete (...)
 servizi arrestati
@@ -82,13 +83,13 @@ In alternativa, senza cambiare cartella (usato negli script di verifica):
 python -m uv run --project <abs services/nome> --directory <abs services/nome> pytest -q
 ```
 
-Stato attuale: 48 test backend — document 8, rag 7, ai 8, learning 8, gateway 17.
+Stato attuale: 52 test backend — document 11, rag 7, ai 8, learning 8, gateway 18.
 
 Frontend:
 
 ```bash
 cd apps/desktop
-corepack pnpm test        # 18 test Vitest
+corepack pnpm test        # 25 test Vitest
 corepack pnpm typecheck   # tsc --noEmit
 corepack pnpm build       # build in dist/
 ```

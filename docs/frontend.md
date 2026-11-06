@@ -6,11 +6,12 @@
 
 | Area | File | Ruolo |
 | --- | --- | --- |
-| Client API | `apps/desktop/src/api.ts` | Envelope, errori tipizzati, import multipart, indice, chat SSE, flashcard |
+| Client API | `apps/desktop/src/api.ts` | Envelope, errori tipizzati, import multipart, indice, chat SSE, flashcard, annotazioni |
 | Parser SSE | `apps/desktop/src/sse.ts` | Eventi `event:`/`data:` con chunk spezzati e CRLF |
 | Documenti | `apps/desktop/src/components/DocumentPanel.tsx` | Import, lista, selezione, delete, rebuild |
 | Tutor | `apps/desktop/src/components/TutorChat.tsx` | Domanda, streaming, stop, citazioni cliccabili |
-| Lettore | `apps/desktop/src/components/DocumentReader.tsx` | Testo del documento, evidenzia il punto citato, crea schede, riprende la lettura |
+| Lettore | `apps/desktop/src/components/DocumentReader.tsx` | Testo del documento, evidenzia il punto citato, annota, crea schede, riprende la lettura |
+| Annotazioni | `apps/desktop/src/annotations.ts` | Segmenti evidenziati e offset della selezione |
 | Schede | `apps/desktop/src/components/FlashcardsPanel.tsx` | Elenco, filtro per documento, mostra risposta, modifica, delete |
 | Corrispondenza citazione | `apps/desktop/src/reader.ts` | Sezione citata, altrimenti pagina |
 | Config | `apps/desktop/src/config.ts` | Gateway e token da variabili Vite |
@@ -28,6 +29,7 @@ Tutte le chiamate passano dal gateway: il frontend non contatta mai direttamente
 7. "Crea scheda" su un passaggio apre una modale con fronte e retro precompilati dal chunk; il salvataggio passa da `POST /api/flashcards`.
 8. "Schede" nella barra superiore apre l'elenco: filtro per documento selezionato, "Mostra risposta", modifica e delete via `PATCH`/`DELETE /api/flashcards/{id}`.
 9. Cliccare un documento apre il lettore. Senza citazione, il punto di partenza è l'ultima posizione salvata (`GET /api/reading-positions/{id}`); lo scorrimento salva il chunk corrente con `PUT`, quindi la posizione sopravvive alla chiusura dell'app.
+10. Nel lettore, selezionare del testo mostra "Evidenzia" e "Nota": salvano un'annotazione con offset relativi al chunk (`POST /api/documents/{id}/annotations`). La stella su un chunk aggiunge o toglie un segnalibro; "Annotazioni" elenca, cerca e riporta al passaggio.
 
 ## Esecuzione
 
@@ -49,11 +51,12 @@ Default del client: `http://127.0.0.1:8010`, token `dev-token`. Sovrascrivibili 
 
 ## Verifica
 
-- 18 test Vitest (parser SSE, client API, corrispondenza citazione → chunk, ripresa della lettura, formattazione del testo).
+- 25 test Vitest (parser SSE, client API, corrispondenza citazione → chunk, ripresa della lettura, annotazioni, formattazione del testo).
 - `tsc --noEmit` e `vite build` puliti.
 - Flusso verificato nel browser: import di `statistica.md` → 3 chunk → indice → domanda → risposta in streaming con citazioni `[1]`-`[3]` → clic su `[2]` → lettore aperto con la sezione "Varianza" evidenziata.
 - Flashcard verificate nel browser: "Crea scheda" su un chunk → fronte e retro precompilati → salvataggio → pannello "Schede" con la scheda → "Mostra risposta" → modifica del fronte → delete → stato vuoto.
 - Ripresa della lettura verificata: apertura del documento, scorrimento fino a "Mediana", chiusura e riapertura sul chunk salvato; posizione riletta dal Learning Service dopo il riavvio dello stack.
+- Annotazioni verificate nel browser: selezione di una frase → "Evidenzia" → tratto evidenziato; "Nota" con testo → comparsa nell'elenco; stella → segnalibro; ricerca nell'elenco; delete.
 - CORS del gateway limitato a `http://localhost:5173` e `http://127.0.0.1:5173` (configurabile con `NOESIS_FRONTEND_ORIGIN`).
 - Finestra desktop: avvio con `tauri:dev`, servizi avviati dalla shell, chiusura senza processi residui (dettagli in [poc-05.md](poc-05.md)).
 
@@ -66,7 +69,8 @@ Default del client: `http://127.0.0.1:8010`, token `dev-token`. Sovrascrivibili 
 - Token e URL non sono configurabili da UI.
 - Una sola conversazione, non persistita.
 - Le flashcard sono solo manuali: niente generazione automatica dal documento, ripetizione spaziata o quiz.
-- La posizione è per documento, non per workspace: un solo segnalibro implicito, nessuna cronologia.
+- La posizione è per documento, non per workspace: nessuna cronologia dei punti visitati.
+- Le annotazioni sono ancorate al testo dei chunk, non alle coordinate del PDF: cambiano se il documento viene reimportato.
 - Il testo del modello è reso in modo minimale: grassetto, codice inline ed elenchi; niente tabelle, link o titoli.
 - Nessun test E2E Playwright né test di accessibilità.
 - Il modello locale può citare fonti parziali o dichiarare "nessuna fonte" in modo impreciso: serve il set di valutazione RAG.

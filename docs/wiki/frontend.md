@@ -14,18 +14,19 @@ React 19 + TypeScript + Vite, dentro la shell Tauri 2. Nessuna logica di parsing
 | `src/sse.ts` | Parser SSE tollerante a chunk spezzati e CRLF |
 | `src/markdown.ts` | Grassetto, codice inline ed elenchi senza dipendenze |
 | `src/reader.ts` | `ReaderTarget`, scelta del chunk citato/salvato, etichette |
+| `src/annotations.ts` | Segmenti evidenziati e offset della selezione rispetto al chunk |
 | `src/components/DocumentPanel.tsx` | Import, lista, selezione, apertura, delete, rebuild |
 | `src/components/TutorChat.tsx` | Domanda, streaming, stop, citazioni cliccabili |
-| `src/components/DocumentReader.tsx` | Lettura chunk, citazione attiva, "Crea scheda", ripresa posizione |
+| `src/components/DocumentReader.tsx` | Lettura chunk, citazione attiva, annotazioni, "Crea scheda", ripresa posizione |
 | `src/components/FlashcardsPanel.tsx` | Elenco schede, filtro, mostra risposta, modifica, delete |
 | `src/components/MessageText.tsx` | Rendering dei segmenti di `markdown.ts` |
 | `src/styles.css` | Tutto lo stile: variabili, layout, componenti, responsive |
-| `src/*.test.ts` | Test Vitest di client, SSE, reader e markdown |
+| `src/*.test.ts` | Test Vitest di client, SSE, reader, annotazioni e markdown |
 
 ## Stato e flussi
 
 - **Server state** con TanStack Query; **local state** con `useState`.
-- Query key usate: `["documents"]`, `["chunks", documentId]`, `["reading-position", documentId]`, `["flashcards", filterId]`.
+- Query key usate: `["documents"]`, `["chunks", documentId]`, `["reading-position", documentId]`, `["annotations", documentId]`, `["flashcards", filterId]`.
 - `App` tiene `selectedId` (documento attivo per il tutor) e `drawer`:
   - `{ kind: "reader", target }`
   - `{ kind: "cards" }`
@@ -47,6 +48,14 @@ React 19 + TypeScript + Vite, dentro la shell Tauri 2. Nessuna logica di parsing
 - Lo scorrimento calcola il primo chunk che ha superato il bordo del contenitore e salva `chunk_id` + `position` via `PUT` (throttle `requestAnimationFrame`, nessun salvataggio se il chunk non cambia).
 - "Crea scheda" apre una modale con fronte/retro precompilati dal chunk e salva via `POST /api/flashcards`.
 - Le schede hanno sezione/pagina del chunk, quindi la fonte resta visibile.
+
+### Annotazioni
+
+- Selezionando testo dentro un chunk compare `.annotation-bar`: "Evidenzia" salva subito, "Nota" apre una modale.
+- `annotations.ts` converte la selezione in offset rispetto al testo del chunk (`rangeOffsets`) e divide il testo in segmenti evidenziati (`segmentsFor`).
+- La stella su ogni chunk è un segnalibro: stesso endpoint, `kind: "bookmark"`, intervallo vuoto.
+- "Annotazioni" apre l'elenco con ricerca locale su nota e testo del chunk; un click scorre al passaggio, la ✕ elimina.
+- Le annotazioni vivono nel Document Service e spariscono con il documento; le query `["annotations", documentId]` si invalidano dopo ogni mutazione.
 
 ### Flashcard
 
@@ -87,9 +96,10 @@ Comandi da `apps/desktop`: `corepack pnpm test`, `pnpm typecheck`, `pnpm build`.
 | `src/api.test.ts` | Envelope, token, import, flashcard, posizione, stream SSE |
 | `src/sse.test.ts` | Chunk spezzati, CRLF, eventi multipli, commenti |
 | `src/reader.test.ts` | Sezione vs pagina, priorità citazione, ripresa, etichette |
+| `src/annotations.test.ts` | Segmenti evidenziati, sovrapposizioni, offset della selezione |
 | `src/markdown.test.ts` | Grassetto, codice, elenchi |
 
-Stato attuale: 18 test, `tsc` e `vite build` puliti. Nessun test di componente o E2E: le verifiche UI sono manuali (vedi `docs/frontend.md`).
+Stato attuale: 25 test, `tsc` e `vite build` puliti. Nessun test di componente o E2E: le verifiche UI sono manuali (vedi `docs/frontend.md`).
 
 ## Ricette
 

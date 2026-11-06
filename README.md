@@ -2,7 +2,7 @@
 
 Piattaforma desktop **local-first** per studiare Statistica, Matematica, ML e Deep Learning: lettore di documenti, tutor IA con RAG citazionale, notebook Python in sandbox, flashcard e quiz.
 
-**Stato:** POC-01, POC-04, POC-02/03 e POC-05 completati; app desktop Tauri 2 con import, indice, tutor in streaming, citazioni, lettore con ripresa della lettura e flashcard create dal testo. Funzionalità MVP ancora da fare.
+**Stato:** POC-01, POC-04, POC-02/03 e POC-05 completati; app desktop Tauri 2 con import, indice, tutor in streaming, citazioni, lettore con ripresa della lettura, annotazioni e flashcard create dal testo. Funzionalità MVP ancora da fare.
 
 ## Documenti
 
@@ -17,7 +17,7 @@ Piattaforma desktop **local-first** per studiare Statistica, Matematica, ML e De
 | [docs/poc-04.md](docs/poc-04.md) | POC-04: SQLite + ChromaDB, RAG con citazioni |
 | [docs/poc-02.md](docs/poc-02.md) | POC-02/03: adapter AI, Ollama, streaming SSE |
 | [docs/poc-05.md](docs/poc-05.md) | POC-05: shell desktop Tauri 2 e ciclo di vita |
-| [docs/frontend.md](docs/frontend.md) | Client React: import, chat, citazioni |
+| [docs/frontend.md](docs/frontend.md) | Client React: import, chat, citazioni, annotazioni |
 | [docs/wiki/README.md](docs/wiki/README.md) | Wiki: mappa delle aree di implementazione |
 | [AGENTS.md](AGENTS.md) | Regole operative per gli agenti di sviluppo |
 
