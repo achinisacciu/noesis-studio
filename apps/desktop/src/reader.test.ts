@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { chunkLabel, selectChunkIndex } from "./reader";
+import { chunkLabel, selectChunkIndex, selectStartIndex } from "./reader";
 import type { Chunk } from "./types";
 
 const chunk = (overrides: Partial<Chunk>): Chunk => ({
@@ -30,6 +30,26 @@ describe("selectChunkIndex", () => {
 
   it("restituisce -1 quando la citazione non ha riferimenti", () => {
     expect(selectChunkIndex(CHUNKS, { section: null, page: null })).toBe(-1);
+  });
+});
+
+describe("selectStartIndex", () => {
+  it("dà priorità alla citazione sulla posizione salvata", () => {
+    expect(
+      selectStartIndex(CHUNKS, { documentId: "d1", section: "Mediana", page: null }, "c0"),
+    ).toBe(2);
+  });
+
+  it("riprende dal chunk salvato quando non c'è citazione", () => {
+    expect(
+      selectStartIndex(CHUNKS, { documentId: "d1", section: null, page: null }, "c1"),
+    ).toBe(1);
+  });
+
+  it("ignora una posizione salvata che non esiste più", () => {
+    expect(
+      selectStartIndex(CHUNKS, { documentId: "d1", section: null, page: null }, "rimosso"),
+    ).toBe(-1);
   });
 });
 

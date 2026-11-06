@@ -31,6 +31,24 @@ export function selectChunkIndex(
   return -1;
 }
 
+/**
+ * Punto di partenza del lettore: vince la citazione, poi l'ultima posizione salvata.
+ * `-1` quando non c'è nulla da ripristinare.
+ */
+export function selectStartIndex(
+  chunks: Chunk[],
+  target: ReaderTarget,
+  savedChunkId: string | null,
+): number {
+  const cited = selectChunkIndex(chunks, target);
+  if (cited !== -1) return cited;
+  if (savedChunkId) {
+    const saved = chunks.findIndex((chunk) => chunk.id === savedChunkId);
+    if (saved !== -1) return saved;
+  }
+  return -1;
+}
+
 export function chunkLabel(chunk: Chunk): string | null {
   if (chunk.section && chunk.page !== null) return `${chunk.section} · p. ${chunk.page}`;
   if (chunk.section) return chunk.section;

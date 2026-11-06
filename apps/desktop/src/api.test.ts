@@ -100,6 +100,39 @@ describe("ApiClient", () => {
     });
   });
 
+  it("salva e rilegge la posizione di lettura", async () => {
+    const position = {
+      document_id: "d1",
+      chunk_id: "c2",
+      position: 2,
+      updated_at: "2026-01-01T00:00:00Z",
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ status: "success", data: { position } }), { status: 200 }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ status: "success", data: position }), { status: 200 }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const saved = await client.getReadingPosition("d1");
+    const updated = await client.saveReadingPosition("d1", "c2", 2);
+
+    expect(saved?.chunk_id).toBe("c2");
+    expect(updated.position).toBe(2);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "http://gateway.test/api/reading-positions/d1",
+      { headers: { Authorization: "Bearer secret" } },
+    );
+    expect(fetchMock.mock.calls[1]?.[1]).toMatchObject({
+      method: "PUT",
+      body: JSON.stringify({ chunk_id: "c2", position: 2 }),
+    });
+  });
+
   it("trasforma lo stream SSE negli eventi del tutor", async () => {
     const body = [
       'event: citation\ndata: {"citation":{"document_id":"d1","page":2,"section":"Varianza","snippet":"..."}}\n\n',

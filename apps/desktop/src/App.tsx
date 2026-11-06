@@ -39,7 +39,14 @@ export function App() {
       </header>
 
       <main className="layout">
-        <DocumentPanel client={client} selectedId={selectedId} onSelect={setSelectedId} />
+        <DocumentPanel
+          client={client}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+          onOpen={(documentId) =>
+            setDrawer({ kind: "reader", target: { documentId, page: null, section: null } })
+          }
+        />
         <TutorChat
           client={client}
           documentId={selectedId}

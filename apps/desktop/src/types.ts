@@ -22,6 +22,13 @@ export interface Citation {
   snippet: string;
 }
 
+export interface ReadingPosition {
+  document_id: string;
+  chunk_id: string;
+  position: number;
+  updated_at: string;
+}
+
 export interface Flashcard {
   id: string;
   document_id: string;

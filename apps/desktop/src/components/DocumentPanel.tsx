@@ -8,13 +8,14 @@ interface Props {
   client: ApiClient;
   selectedId: string | null;
   onSelect: (documentId: string | null) => void;
+  onOpen: (documentId: string) => void;
 }
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "operazione non riuscita";
 }
 
-export function DocumentPanel({ client, selectedId, onSelect }: Props) {
+export function DocumentPanel({ client, selectedId, onSelect, onOpen }: Props) {
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +112,10 @@ export function DocumentPanel({ client, selectedId, onSelect }: Props) {
           >
             <button
               className="document-open"
-              onClick={() => onSelect(document.id)}
+              onClick={() => {
+                onSelect(document.id);
+                onOpen(document.id);
+              }}
               title={document.filename}
             >
               <span className="document-title">{document.title}</span>

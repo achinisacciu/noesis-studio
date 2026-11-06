@@ -2,7 +2,7 @@
 
 Piattaforma desktop **local-first** per studiare Statistica, Matematica, ML e Deep Learning: lettore di documenti, tutor IA con RAG citazionale, notebook Python in sandbox, flashcard e quiz.
 
-**Stato:** POC-01, POC-04, POC-02/03 e POC-05 completati; app desktop Tauri 2 con import, indice, tutor in streaming, citazioni, lettore e flashcard create dal testo. Funzionalità MVP ancora da fare.
+**Stato:** POC-01, POC-04, POC-02/03 e POC-05 completati; app desktop Tauri 2 con import, indice, tutor in streaming, citazioni, lettore con ripresa della lettura e flashcard create dal testo. Funzionalità MVP ancora da fare.
 
 ## Documenti
 

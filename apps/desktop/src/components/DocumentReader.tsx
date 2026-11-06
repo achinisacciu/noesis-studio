@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ApiClient } from "../api";
-import { chunkLabel, selectChunkIndex, type ReaderTarget } from "../reader";
+import { chunkLabel, selectStartIndex, type ReaderTarget } from "../reader";
 import type { Chunk } from "../types";
 
 interface Props {
@@ -16,6 +16,7 @@ export function DocumentReader({ client, target, onClose }: Props) {
   const [draft, setDraft] = useState<{ chunk: Chunk; front: string; back: string } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   const chunks = useQuery({
     queryKey: ["chunks", target.documentId],
@@ -25,16 +26,55 @@ export function DocumentReader({ client, target, onClose }: Props) {
     queryKey: ["documents"],
     queryFn: () => client.listDocuments(),
   });
+  const resume = useQuery({
+    queryKey: ["reading-position", target.documentId],
+    queryFn: () => client.getReadingPosition(target.documentId),
+    // la citazione indica già il punto: la posizione salvata serve solo all'apertura libera
+    enabled: target.section === null && target.page === null,
+  });
 
   const activeIndex = useMemo(
-    () => (chunks.data ? selectChunkIndex(chunks.data, target) : -1),
-    [chunks.data, target],
+    () =>
+      chunks.data
+        ? selectStartIndex(chunks.data, target, resume.data?.chunk_id ?? null)
+        : -1,
+    [chunks.data, target, resume.data],
   );
 
   const activeRef = useRef<HTMLElement>(null);
   useEffect(() => {
     activeRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
   }, [activeIndex, chunks.data]);
+
+  // la posizione è "l'ultimo chunk che ha superato il bordo superiore del lettore"
+  useEffect(() => {
+    const root = bodyRef.current;
+    if (!root || !chunks.data?.length) return;
+    let frame = 0;
+    let lastSaved = "";
+    const track = () => {
+      frame = 0;
+      const rootTop = root.getBoundingClientRect().top;
+      let current: HTMLElement | null = null;
+      for (const item of root.querySelectorAll<HTMLElement>("[data-chunk-id]")) {
+        if (item.getBoundingClientRect().top - rootTop <= 12) current = item;
+      }
+      const chunk = chunks.data?.find((item) => item.id === current?.dataset.chunkId);
+      if (!chunk || chunk.id === lastSaved) return;
+      lastSaved = chunk.id;
+      void client
+        .saveReadingPosition(target.documentId, chunk.id, chunk.position)
+        .catch(() => undefined);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(track);
+    };
+    root.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      root.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [chunks.data, client, target.documentId]);
 
   const createCard = useMutation({
     mutationFn: () =>
@@ -74,13 +114,14 @@ export function DocumentReader({ client, target, onClose }: Props) {
         </button>
       </header>
 
-      <div className="reader-body">
+      <div className="reader-body" ref={bodyRef}>
         {notice && <p className="notice">{notice}</p>}
         {chunks.isLoading && <p className="muted">Apro il documento…</p>}
         {chunks.isError && <p className="notice error">Testo non disponibile.</p>}
         {chunks.data?.map((chunk, index) => (
           <article
             key={chunk.id}
+            data-chunk-id={chunk.id}
             ref={index === activeIndex ? activeRef : undefined}
             className={`reader-chunk ${index === activeIndex ? "active" : ""}`}
           >

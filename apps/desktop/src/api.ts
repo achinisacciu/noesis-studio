@@ -5,6 +5,7 @@ import type {
   DocumentSummary,
   Flashcard,
   FlashcardInput,
+  ReadingPosition,
   TutorEvent,
 } from "./types";
 
@@ -148,6 +149,27 @@ export class ApiClient {
       headers: this.headers(),
     });
     await this.envelope<{ id: string }>(response);
+  }
+
+  async getReadingPosition(documentId: string): Promise<ReadingPosition | null> {
+    const response = await fetch(`${this.baseUrl}/api/reading-positions/${documentId}`, {
+      headers: this.headers(),
+    });
+    const data = await this.envelope<{ position: ReadingPosition | null }>(response);
+    return data.position;
+  }
+
+  async saveReadingPosition(
+    documentId: string,
+    chunkId: string,
+    position: number,
+  ): Promise<ReadingPosition> {
+    const response = await fetch(`${this.baseUrl}/api/reading-positions/${documentId}`, {
+      method: "PUT",
+      headers: this.headers({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ chunk_id: chunkId, position }),
+    });
+    return this.envelope<ReadingPosition>(response);
   }
 
   async *chat(
