@@ -1,0 +1,19 @@
+[package]
+name = "noesis-desktop"
+version = "0.1.0"
+description = "Noesis Studio desktop shell"
+authors = ["Noesis Studio"]
+license = "MIT"
+edition = "2024"
+rust-version = "1.90"
+
+[lib]
+name = "noesis_desktop_lib"
+# Solo rlib: i target desktop non usano la dll, che con mingw va in errore di export ordinal
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.4", features = [] }
+
+[dependencies]
+tauri = { version = "2.12.5", features = [] }

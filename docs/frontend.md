@@ -1,6 +1,6 @@
 # Interfaccia desktop
 
-**Stato:** primo client funzionante (Vite + React + TypeScript), wrapper Tauri non ancora aggiunto.
+**Stato:** client React/TypeScript dentro una shell Tauri 2; avvio e arresto dei servizi gestiti dalla shell in sviluppo.
 
 ## Cosa è stato costruito
 
@@ -27,6 +27,15 @@ Tutte le chiamate passano dal gateway: il frontend non contatta mai direttamente
 
 ## Esecuzione
 
+Desktop (shell Tauri, avvia anche i servizi se il gateway è spento):
+
+```bash
+cd apps/desktop
+corepack pnpm tauri:dev
+```
+
+Solo browser:
+
 ```bash
 python scripts/stack.py --dev     # backend su porte fisse e token dev-token
 cd apps/desktop && corepack pnpm dev
@@ -40,10 +49,12 @@ Default del client: `http://127.0.0.1:8010`, token `dev-token`. Sovrascrivibili 
 - `tsc --noEmit` e `vite build` puliti.
 - Flusso verificato nel browser: import di `statistica.md` → 3 chunk → indice → domanda → risposta in streaming con citazioni `[1]`-`[3]` → clic su `[2]` → lettore aperto con la sezione "Varianza" evidenziata.
 - CORS del gateway limitato a `http://localhost:5173` e `http://127.0.0.1:5173` (configurabile con `NOESIS_FRONTEND_ORIGIN`).
+- Finestra desktop: avvio con `tauri:dev`, servizi avviati dalla shell, chiusura senza processi residui (dettagli in [poc-05.md](poc-05.md)).
 
 ## Limiti noti
 
-- Nessun wrapper Tauri: niente packaging desktop, sidecar o lifecycle gestito dall'app.
+- Il bundle di produzione non include i servizi Python: serve Python nel PATH e il repo. Sidecar impacchettato ancora da fare.
+- La shell desktop usa `dev-token`: il token casuale richiede IPC tra Rust e frontend.
 - Il lettore mostra il testo estratto dai chunk, non il PDF originale: manca il rendering della pagina con PyMuPDF/PDF.js.
 - Le citazioni con sola pagina (PDF) evidenziano il primo chunk di quella pagina.
 - Token e URL non sono configurabili da UI.

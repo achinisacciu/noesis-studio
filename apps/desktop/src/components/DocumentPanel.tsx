@@ -22,6 +22,9 @@ export function DocumentPanel({ client, selectedId, onSelect }: Props) {
   const documents = useQuery({
     queryKey: ["documents"],
     queryFn: () => client.listDocuments(),
+    // all'avvio desktop i servizi possono impiegare qualche secondo
+    retry: 5,
+    retryDelay: (attempt) => Math.min(2000, 400 * attempt),
   });
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["documents"] });
@@ -86,9 +89,12 @@ export function DocumentPanel({ client, selectedId, onSelect }: Props) {
       <div className="document-list">
         {documents.isLoading && <p className="muted">Carico i documenti…</p>}
         {documents.isError && (
-          <p className="notice error">
-            Gateway non raggiungibile. Avvia lo stack con `python scripts/stack.py --dev`.
-          </p>
+          <div className="notice error">
+            <p>Gateway non raggiungibile. Avvia lo stack con `python scripts/stack.py --dev`.</p>
+            <button className="button ghost" onClick={() => void documents.refetch()}>
+              Riprova
+            </button>
+          </div>
         )}
         {documents.data?.length === 0 && (
           <p className="muted">

@@ -267,6 +267,10 @@ button:disabled {
   border: 1px solid #4a2430;
 }
 
+.notice.error p {
+  margin: 0 0 8px;
+}
+
 .chat {
   display: flex;
   flex-direction: column;

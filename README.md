@@ -2,7 +2,7 @@
 
 Piattaforma desktop **local-first** per studiare Statistica, Matematica, ML e Deep Learning: lettore di documenti, tutor IA con RAG citazionale, notebook Python in sandbox, flashcard e quiz.
 
-**Stato:** POC-01, POC-04 e POC-02/03 completati; primo client desktop in React con import, indice, tutor in streaming e citazioni. Wrapper Tauri e funzionalità MVP ancora da fare.
+**Stato:** POC-01, POC-04, POC-02/03 e POC-05 completati; app desktop Tauri 2 con import, indice, tutor in streaming, citazioni e lettore. Funzionalità MVP ancora da fare.
 
 ## Documenti
 
@@ -16,6 +16,7 @@ Piattaforma desktop **local-first** per studiare Statistica, Matematica, ML e De
 | [docs/poc-01.md](docs/poc-01.md) | POC-01: microservizi locali, esito e limiti |
 | [docs/poc-04.md](docs/poc-04.md) | POC-04: SQLite + ChromaDB, RAG con citazioni |
 | [docs/poc-02.md](docs/poc-02.md) | POC-02/03: adapter AI, Ollama, streaming SSE |
+| [docs/poc-05.md](docs/poc-05.md) | POC-05: shell desktop Tauri 2 e ciclo di vita |
 | [docs/frontend.md](docs/frontend.md) | Client React: import, chat, citazioni |
 | [AGENTS.md](AGENTS.md) | Regole operative per gli agenti di sviluppo |
 
@@ -29,15 +30,24 @@ Tauri 2 + React/TypeScript per il desktop, microservizi Python/FastAPI in locale
 - `services/` — `document`, `rag`, `ai`, `gateway`: processi Python indipendenti.
 - `packages/contracts` — modelli Pydantic condivisi.
 - `packages/ai-adapters` — contratto adapter e implementazione Ollama.
-- `apps/desktop` — client React/TypeScript (Vite), in attesa del wrapper Tauri.
-- `scripts/` — supervisore del POC e aggiornamento della skill ponytail.
-- `apps/desktop` — non ancora creata (Tauri 2 + React).
+- `apps/desktop` — app desktop Tauri 2 + React/TypeScript.
+- `scripts/` — supervisore dei servizi e aggiornamento della skill ponytail.
 
 La struttura target completa è in [AGENTS.md §4](AGENTS.md#4-struttura-del-repository-target).
 
 ## Sviluppo
 
-Prerequisiti: Python 3.11+, `uv`, Ollama con un modello installato (default `qwen3.5:0.8b`). Per il desktop serviranno anche Node 22+, `pnpm` e Rust.
+Prerequisiti: Python 3.11+, `uv`, Ollama con un modello installato (default `qwen3.5:0.8b`). Per il desktop servono anche Node 22+, `pnpm` (via `corepack`) e Rust.
+
+App desktop (avvia anche i servizi se il gateway è spento):
+
+```bash
+cd apps/desktop
+corepack pnpm install
+corepack pnpm tauri:dev
+```
+
+Solo frontend nel browser:
 
 ```bash
 ollama pull qwen3.5:0.8b          # una volta sola
@@ -48,11 +58,12 @@ In un secondo terminale:
 
 ```bash
 cd apps/desktop
-corepack pnpm install
 corepack pnpm dev                 # http://localhost:5173
 ```
 
 `python scripts/stack.py --check` verifica invece l'intero flusso e termina senza aprire l'interfaccia.
+
+Con lo stack attivo (`python scripts/stack.py --dev`), `python scripts/eval_rag.py` misura l'accuratezza delle citazioni sul corpus di `evaluation/`: 48 domande, risultato attuale 95,8% (gate 90%).
 
 Il tutor si interroga via gateway:
 
@@ -79,7 +90,7 @@ corepack pnpm test
 corepack pnpm typecheck
 ```
 
-Dettagli e limiti in [docs/poc-04.md](docs/poc-04.md), [docs/poc-02.md](docs/poc-02.md) e [docs/frontend.md](docs/frontend.md); il primo prototipo è in [docs/poc-01.md](docs/poc-01.md).
+Dettagli e limiti in [docs/poc-04.md](docs/poc-04.md), [docs/poc-02.md](docs/poc-02.md), [docs/poc-05.md](docs/poc-05.md) e [docs/frontend.md](docs/frontend.md); il primo prototipo è in [docs/poc-01.md](docs/poc-01.md).
 
 Aggiornamento della skill ponytail:
 

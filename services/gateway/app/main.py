@@ -22,7 +22,8 @@ def create_app() -> FastAPI:
     app = FastAPI(title=SERVICE, version="0.1.0")
     origins = os.getenv(
         "NOESIS_FRONTEND_ORIGIN",
-        "http://localhost:5173,http://127.0.0.1:5173",
+        # Vite in sviluppo e webview Tauri nel bundle
+        "http://localhost:5173,http://127.0.0.1:5173,tauri://localhost,http://tauri.localhost",
     ).split(",")
     app.add_middleware(
         CORSMiddleware,
