@@ -26,6 +26,7 @@ Questa wiki dice **dove guardare** nel codice. Non sostituisce i documenti di pr
 | Capire perché i servizi non partono | `scripts/stack.py`, `data/logs/` | [sviluppo](sviluppo.md#problemi-noti) |
 | Tauri, avvio e chiusura | `apps/desktop/src-tauri/src/lib.rs` | `docs/poc-05.md` |
 | Dare priorità al prossimo lavoro | `docs/roadmap.md`, `docs/user-stories.md` | [funzionalità](funzionalita.md#non-ancora-implementato) |
+| Aggiungere materiale di studio | `resources/README.md` | Import dalla UI, poi ricostruzione dell'indice |
 
 ## Mappa del repository
 
@@ -46,6 +47,7 @@ scripts/
   stack.py               supervisore dei cinque servizi
   eval_rag.py            valutazione delle citazioni
 evaluation/              corpus e domande etichettate
+resources/               materiale di studio versionato (es. wikipedia/)
 docs/                    PRD, architettura, POC, wiki
 data/                    stato locale (gitignored)
 ```

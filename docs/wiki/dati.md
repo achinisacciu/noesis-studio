@@ -19,6 +19,7 @@ data/
 - SQLite in WAL: accanto ai `.db` compaiono `-wal` e `-shm`.
 - `data/check/` viene cancellata e ricreata a ogni `python scripts/stack.py --check`.
 - Non committare mai `data/`: contiene dati utente.
+- Le risorse di studio versionate stanno in `resources/` (es. `resources/wikipedia/`), non in `data/`: lì c'è la sorgente, in `data/files/` la copia importata.
 
 ## Schema Document (`data/sqlite/documents.db`)
 

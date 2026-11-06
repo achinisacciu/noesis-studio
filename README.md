@@ -19,6 +19,7 @@ Piattaforma desktop **local-first** per studiare Statistica, Matematica, ML e De
 | [docs/poc-05.md](docs/poc-05.md) | POC-05: shell desktop Tauri 2 e ciclo di vita |
 | [docs/frontend.md](docs/frontend.md) | Client React: import, chat, citazioni, annotazioni |
 | [docs/wiki/README.md](docs/wiki/README.md) | Wiki: mappa delle aree di implementazione |
+| [resources/README.md](resources/README.md) | Materiale di studio versionato (Wikipedia) e licenza |
 | [AGENTS.md](AGENTS.md) | Regole operative per gli agenti di sviluppo |
 
 ## Stack
@@ -32,6 +33,7 @@ Tauri 2 + React/TypeScript per il desktop, microservizi Python/FastAPI in locale
 - `packages/contracts` — modelli Pydantic condivisi.
 - `packages/ai-adapters` — contratto adapter e implementazione Ollama.
 - `apps/desktop` — app desktop Tauri 2 + React/TypeScript.
+- `resources/` — materiale di studio versionato che alimenta il RAG (es. `wikipedia/`).
 - `scripts/` — supervisore dei servizi e aggiornamento della skill ponytail.
 
 La struttura target completa è in [AGENTS.md §4](AGENTS.md#4-struttura-del-repository-target).

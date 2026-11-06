@@ -62,6 +62,7 @@ Punti di modifica tipici: un nuovo formato richiede `PARSERS` in `parsing.py`; u
 | Quiz a risposta multipla (F3) | Banco domande, valutazione, padronanza | Learning + AI + **Job Service**; schema progressi |
 | Job Service | Coda persistente, stati, retry | Nuovo servizio; regola `AGENTS.md` §11 |
 | Persistenza conversazione | Tabella + ripristino UI | Learning o servizio dedicato; decidere ownership |
+| Import di una cartella di risorse | Oggi solo un file alla volta; niente scansione né coda | Document (endpoint batch) + UI, sopra `resources/` |
 | Sidecar Python nel bundle | Packaging e avvio senza repo | `apps/desktop/src-tauri`, `scripts/` (vedi `docs/poc-05.md`) |
 | Test E2E Playwright | Percorso completo automatico | `tests/` o `apps/desktop/e2e` |
 
