@@ -451,6 +451,144 @@ button:disabled {
   color: var(--muted);
 }
 
+.reader-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reader-toggle {
+  padding: 5px 9px;
+  font-size: 12px;
+}
+
+.annotation-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+}
+
+.annotation-quote {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.annotation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.annotation-actions .button {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.annotation-panel {
+  max-height: 38vh;
+  overflow-y: auto;
+  padding: 10px 18px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.annotation-panel input[type="search"] {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.annotation-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.annotation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+
+.annotation-item:first-child {
+  border-top: 0;
+}
+
+.annotation-jump {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.annotation-kind {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.annotation-excerpt {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.annotation-note {
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.reader-chunk-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.reader-chunk-head .reader-label {
+  margin-bottom: 0;
+}
+
+.bookmark {
+  padding: 2px 6px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.bookmark.on {
+  color: var(--accent);
+}
+
+.reader-mark {
+  padding: 1px 0;
+  border-radius: 3px;
+  background: rgba(250, 204, 21, 0.32);
+  color: inherit;
+}
+
+.reader-mark[title] {
+  cursor: help;
+}
+
 .reader-chunk p {
   margin: 0;
   line-height: 1.65;

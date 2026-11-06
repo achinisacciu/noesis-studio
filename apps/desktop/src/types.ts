@@ -47,6 +47,27 @@ export interface FlashcardInput {
   section?: string | null;
 }
 
+export type AnnotationKind = "highlight" | "note" | "bookmark";
+
+export interface Annotation {
+  id: string;
+  document_id: string;
+  chunk_id: string;
+  kind: AnnotationKind;
+  start: number;
+  end: number;
+  note: string;
+  created_at: string;
+}
+
+export interface AnnotationInput {
+  chunk_id: string;
+  kind: AnnotationKind;
+  start?: number;
+  end?: number;
+  note?: string;
+}
+
 export type TutorEvent =
   | { type: "token"; delta: string }
   | { type: "citation"; citation: Citation }

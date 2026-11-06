@@ -1,5 +1,7 @@
 import { parseSse } from "./sse";
 import type {
+  Annotation,
+  AnnotationInput,
   Chunk,
   Citation,
   DocumentSummary,
@@ -111,6 +113,38 @@ export class ApiClient {
       headers: this.headers(),
     });
     await this.envelope<{ documents: number; chunks: number }>(response);
+  }
+
+  async listAnnotations(documentId: string): Promise<Annotation[]> {
+    const response = await fetch(
+      `${this.baseUrl}/api/documents/${documentId}/annotations`,
+      { headers: this.headers() },
+    );
+    const data = await this.envelope<{ annotations: Annotation[] }>(response);
+    return data.annotations;
+  }
+
+  async createAnnotation(
+    documentId: string,
+    input: AnnotationInput,
+  ): Promise<Annotation> {
+    const response = await fetch(
+      `${this.baseUrl}/api/documents/${documentId}/annotations`,
+      {
+        method: "POST",
+        headers: this.headers({ "Content-Type": "application/json" }),
+        body: JSON.stringify(input),
+      },
+    );
+    return this.envelope<Annotation>(response);
+  }
+
+  async deleteAnnotation(annotationId: string): Promise<void> {
+    const response = await fetch(
+      `${this.baseUrl}/api/annotations/${annotationId}`,
+      { method: "DELETE", headers: this.headers() },
+    );
+    await this.envelope<{ id: string }>(response);
   }
 
   async listFlashcards(documentId: string | null = null): Promise<Flashcard[]> {
